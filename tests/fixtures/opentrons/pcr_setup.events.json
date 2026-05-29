@@ -1,0 +1,217 @@
+[
+  {
+    "command_type": "pickup_tip",
+    "index": 0,
+    "args": {},
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "aspirate",
+    "index": 1,
+    "args": {
+      "volume": 120
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 2,
+    "args": {
+      "volume": 15
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "mix",
+    "index": 3,
+    "args": {
+      "repetitions": 3,
+      "volume": 10
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 4,
+    "args": {
+      "volume": 15
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "mix",
+    "index": 5,
+    "args": {
+      "repetitions": 3,
+      "volume": 10
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 6,
+    "args": {
+      "volume": 15
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "mix",
+    "index": 7,
+    "args": {
+      "repetitions": 3,
+      "volume": 10
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 8,
+    "args": {
+      "volume": 15
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "mix",
+    "index": 9,
+    "args": {
+      "repetitions": 3,
+      "volume": 10
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 10,
+    "args": {
+      "volume": 15
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "mix",
+    "index": 11,
+    "args": {
+      "repetitions": 3,
+      "volume": 10
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 12,
+    "args": {
+      "volume": 15
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "mix",
+    "index": 13,
+    "args": {
+      "repetitions": 3,
+      "volume": 10
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 14,
+    "args": {
+      "volume": 15
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "mix",
+    "index": 15,
+    "args": {
+      "repetitions": 3,
+      "volume": 10
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 16,
+    "args": {
+      "volume": 15
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "mix",
+    "index": 17,
+    "args": {
+      "repetitions": 3,
+      "volume": 10
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "drop_tip",
+    "index": 18,
+    "args": {},
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "pause",
+    "index": 19,
+    "args": {
+      "msg": "Load template strip and confirm"
+    },
+    "mount": null,
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "delay",
+    "index": 20,
+    "args": {
+      "seconds": 30,
+      "msg": "Equilibration"
+    },
+    "mount": null,
+    "module_id": null,
+    "line": null
+  }
+]

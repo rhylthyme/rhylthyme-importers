@@ -1,0 +1,15 @@
+.vercel
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+build/
+dist/
+.env
+.env.*
+.DS_Store
+.venv/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/

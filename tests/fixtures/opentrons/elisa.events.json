@@ -1,0 +1,137 @@
+[
+  {
+    "command_type": "temperature.set_temperature",
+    "index": 0,
+    "args": {
+      "celsius": 4
+    },
+    "mount": null,
+    "module_id": "temperature-slot-9",
+    "line": null
+  },
+  {
+    "command_type": "temperature.await_temperature",
+    "index": 1,
+    "args": {
+      "celsius": 4
+    },
+    "mount": null,
+    "module_id": "temperature-slot-9",
+    "line": null
+  },
+  {
+    "command_type": "pickup_tip",
+    "index": 2,
+    "args": {},
+    "mount": "left",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "aspirate",
+    "index": 3,
+    "args": {
+      "volume": 200
+    },
+    "mount": "left",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 4,
+    "args": {
+      "volume": 200
+    },
+    "mount": "left",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "drop_tip",
+    "index": 5,
+    "args": {},
+    "mount": "left",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "heater_shaker.close_labware_latch",
+    "index": 6,
+    "args": {},
+    "mount": null,
+    "module_id": "heater-shaker-slot-7",
+    "line": null
+  },
+  {
+    "command_type": "heater_shaker.shake",
+    "index": 7,
+    "args": {
+      "rpm": 800
+    },
+    "mount": null,
+    "module_id": "heater-shaker-slot-7",
+    "line": null
+  },
+  {
+    "command_type": "heater_shaker.deactivate_shaker",
+    "index": 8,
+    "args": {},
+    "mount": null,
+    "module_id": "heater-shaker-slot-7",
+    "line": null
+  },
+  {
+    "command_type": "heater_shaker.open_labware_latch",
+    "index": 9,
+    "args": {},
+    "mount": null,
+    "module_id": "heater-shaker-slot-7",
+    "line": null
+  },
+  {
+    "command_type": "magnetic.engage",
+    "index": 10,
+    "args": {
+      "height_from_base": 4
+    },
+    "mount": null,
+    "module_id": "magnetic-slot-4",
+    "line": null
+  },
+  {
+    "command_type": "magnetic.disengage",
+    "index": 11,
+    "args": {},
+    "mount": null,
+    "module_id": "magnetic-slot-4",
+    "line": null
+  },
+  {
+    "command_type": "absorbance.initialize",
+    "index": 12,
+    "args": {
+      "mode": "single",
+      "wavelengths": null
+    },
+    "mount": null,
+    "module_id": "absorbance-slot-3",
+    "line": null
+  },
+  {
+    "command_type": "absorbance.read",
+    "index": 13,
+    "args": {},
+    "mount": null,
+    "module_id": "absorbance-slot-3",
+    "line": null
+  },
+  {
+    "command_type": "temperature.deactivate",
+    "index": 14,
+    "args": {},
+    "mount": null,
+    "module_id": "temperature-slot-9",
+    "line": null
+  }
+]

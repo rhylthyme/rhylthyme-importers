@@ -1,0 +1,37 @@
+{
+  "id": "prot_missing_dur_001",
+  "object_type": "protocol",
+  "name": "Mixed-fidelity protocol",
+  "description": "Synthetic Phase-2 fixture: some steps have explicit durations, some only mention them in the description, some have neither.",
+  "steps": [
+    {
+      "id": "s1",
+      "name": "Setup",
+      "description": "Lay out the bench."
+    },
+    {
+      "id": "s2",
+      "name": "Incubate first batch",
+      "description": "Incubate the first batch for 45 minutes at 37°C."
+    },
+    {
+      "id": "s3",
+      "name": "Spin briefly",
+      "description": "Spin 30 seconds at 13,000g."
+    },
+    {
+      "id": "s4",
+      "name": "Wait for result",
+      "description": "Wait for the result; varies by sample."
+    },
+    {
+      "id": "s5",
+      "name": "Image",
+      "description": "Image on the gel imager.",
+      "duration_minutes": 5,
+      "instruments": [
+        { "id": "inst_imager", "name": "Gel imager" }
+      ]
+    }
+  ]
+}

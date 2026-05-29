@@ -1,0 +1,59 @@
+{
+  "id": "prot_pcr_demo_001",
+  "name": "PCR setup, thermocycle, and gel",
+  "description": "Two-step PCR followed by gel electrophoresis. Synthetic Phase-1 fixture; does not reflect a real Benchling tenant.",
+  "revision": "v3",
+  "steps": [
+    {
+      "id": "step_mix",
+      "name": "Mix PCR reagents",
+      "description": "Combine 12.5 µL master mix, 1 µL each primer, 9.5 µL water, 1 µL template per well.",
+      "duration_minutes": 5,
+      "instruments": []
+    },
+    {
+      "id": "step_load",
+      "name": "Load thermocycler",
+      "description": "Transfer the 96-well plate to the thermocycler.",
+      "duration_minutes": 2,
+      "instruments": [
+        { "id": "inst_tc_1", "name": "Thermocycler 1" }
+      ]
+    },
+    {
+      "id": "step_cycle",
+      "name": "Run thermocycler program",
+      "description": "30 cycles: 95°C 30s / 60°C 30s / 72°C 60s, then 72°C 5min hold.",
+      "duration_minutes": 90,
+      "temperature_c": 60,
+      "instruments": [
+        { "id": "inst_tc_1", "name": "Thermocycler 1" }
+      ]
+    },
+    {
+      "id": "step_gel_prep",
+      "name": "Cast agarose gel",
+      "description": "Pour 1.5% agarose gel with SYBR Safe.",
+      "duration_minutes": 20,
+      "instruments": []
+    },
+    {
+      "id": "step_load_gel",
+      "name": "Load gel and run electrophoresis",
+      "description": "Load 10 µL per well alongside a ladder; run at 100 V for 35 minutes.",
+      "duration_minutes": 35,
+      "instruments": [
+        { "id": "inst_gel_box_1", "name": "Gel box — bench top" }
+      ]
+    },
+    {
+      "id": "step_image",
+      "name": "Image the gel",
+      "description": "Image on the UV transilluminator and save the photo to the entry.",
+      "duration_minutes": 5,
+      "instruments": [
+        { "id": "inst_gel_imager", "name": "Plate reader / UV imager" }
+      ]
+    }
+  ]
+}

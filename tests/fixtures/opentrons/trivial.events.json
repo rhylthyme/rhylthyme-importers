@@ -1,0 +1,6 @@
+[
+  {"command_type": "pickup_tip", "index": 0, "args": {}, "mount": "left", "module_id": null, "line": null},
+  {"command_type": "aspirate",   "index": 1, "args": {"volume": 100}, "mount": "left", "module_id": null, "line": null},
+  {"command_type": "dispense",   "index": 2, "args": {"volume": 100}, "mount": "left", "module_id": null, "line": null},
+  {"command_type": "drop_tip",   "index": 3, "args": {}, "mount": "left", "module_id": null, "line": null}
+]

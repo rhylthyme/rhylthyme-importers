@@ -1,0 +1,58 @@
+{
+  "id": "wftask_elisa_001",
+  "object_type": "workflow_task",
+  "name": "ELISA assay run",
+  "description": "Sandwich ELISA on 96-well plate. Synthetic Phase-2 fixture; mirrors the Workflow Task API shape, not a real tenant.",
+  "revision": "v2",
+  "steps": [
+    {
+      "id": "wfs_coat",
+      "name": "Coat plate",
+      "description": "Add capture antibody (100 µL per well, 2 µg/mL). Incubate overnight at 4°C.",
+      "duration_minutes": 720,
+      "fields": {
+        "Instrument": { "value": "Cold incubator" }
+      }
+    },
+    {
+      "id": "wfs_wash1",
+      "name": "Wash plate (3×)",
+      "description": "Wash 3× with PBS-T using the plate washer.",
+      "duration_minutes": 6,
+      "instruments": [
+        { "id": "inst_washer", "name": "Plate washer" }
+      ]
+    },
+    {
+      "id": "wfs_block",
+      "name": "Block",
+      "description": "Add 200 µL 1% BSA-PBS per well. Incubate for 60 minutes at room temperature.",
+      "instruments": [
+        { "id": "inst_shaker", "name": "Orbital shaker" }
+      ]
+    },
+    {
+      "id": "wfs_sample",
+      "name": "Add samples",
+      "description": "Pipette samples in duplicate, 100 µL per well.",
+      "duration_minutes": 10
+    },
+    {
+      "id": "wfs_incubate",
+      "name": "Sample incubation",
+      "description": "Incubate for 90 minutes at room temperature with gentle shaking.",
+      "instruments": [
+        { "id": "inst_shaker", "name": "Orbital shaker" }
+      ]
+    },
+    {
+      "id": "wfs_read",
+      "name": "Read plate",
+      "description": "Read absorbance at 450 nm.",
+      "duration_minutes": 3,
+      "instruments": [
+        { "id": "inst_reader", "name": "Plate reader" }
+      ]
+    }
+  ]
+}

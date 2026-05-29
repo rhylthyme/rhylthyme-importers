@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rhylthyme-importers"
+version = "0.3.0"
+description = "Import plugins for converting external data sources to Rhylthyme programs"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Jeremy Leipzig", email = "leipzig@gmail.com"}
+]
+keywords = ["rhylthyme", "scheduling", "recipes", "protocols", "import"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "requests>=2.28.0",
+    "pyyaml>=6.0",
+    "python-pptx>=0.6.21",
+    "recipe-scrapers>=15.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
+cooklang = ["cooklang-py>=0.3.2"]
+
+[project.urls]
+Homepage = "https://github.com/rhylthyme/rhylthyme-importers"
+Repository = "https://github.com/rhylthyme/rhylthyme-importers"
+Documentation = "https://github.com/rhylthyme/rhylthyme-importers#readme"
+"Bug Tracker" = "https://github.com/rhylthyme/rhylthyme-importers/issues"
+
+[project.scripts]
+rhylthyme-import = "rhylthyme_importers.cli:main"
+rhylthyme-import-cooklang-federation = "rhylthyme_importers.cooklang_federation:main"
+rhylthyme-import-recipe-scrapers = "rhylthyme_importers.recipe_scrapers_mine:main"
+rhylthyme-sweep-supported-sites = "rhylthyme_importers.sweep_supported_sites:main"
+rhylthyme-clean-titles = "rhylthyme_importers.clean_titles:main"
+rhylthyme-detect-text-thumbs = "rhylthyme_importers.detect_text_thumbs:main"
+rhylthyme-backfill-taxonomy = "rhylthyme_importers.backfill_taxonomy:main"
+rhylthyme-backfill-language = "rhylthyme_importers.backfill_language:main"
+rhylthyme-import-opentrons = "rhylthyme_importers.opentrons_cli:main"
+rhylthyme-import-benchling = "rhylthyme_importers.benchling_cli:main"
+rhylthyme-embed-recipes = "rhylthyme_importers.embed_recipes:main"
+rhylthyme-replace-broken-thumbs = "rhylthyme_importers.replace_broken_thumbs:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,126 @@
+[
+  {
+    "command_type": "gripper.move_labware",
+    "index": 0,
+    "args": {},
+    "mount": "gripper",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "pickup_tip",
+    "index": 1,
+    "args": {},
+    "mount": "flex_96",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "aspirate",
+    "index": 2,
+    "args": {
+      "volume": 150
+    },
+    "mount": "flex_96",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 3,
+    "args": {
+      "volume": 150
+    },
+    "mount": "flex_96",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "drop_tip",
+    "index": 4,
+    "args": {},
+    "mount": "flex_96",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "pickup_tip",
+    "index": 5,
+    "args": {},
+    "mount": "flex_96",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "aspirate",
+    "index": 6,
+    "args": {
+      "volume": 150
+    },
+    "mount": "flex_96",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 7,
+    "args": {
+      "volume": 150
+    },
+    "mount": "flex_96",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "drop_tip",
+    "index": 8,
+    "args": {},
+    "mount": "flex_96",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "gripper.move_labware",
+    "index": 9,
+    "args": {},
+    "mount": "gripper",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "pickup_tip",
+    "index": 10,
+    "args": {},
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "aspirate",
+    "index": 11,
+    "args": {
+      "volume": 5
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "dispense",
+    "index": 12,
+    "args": {
+      "volume": 5
+    },
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  },
+  {
+    "command_type": "drop_tip",
+    "index": 13,
+    "args": {},
+    "mount": "right",
+    "module_id": null,
+    "line": null
+  }
+]

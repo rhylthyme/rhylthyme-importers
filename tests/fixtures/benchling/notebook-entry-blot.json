@@ -1,0 +1,75 @@
+{
+  "id": "ent_blot_001",
+  "object_type": "entry",
+  "name": "Western blot — sample run",
+  "description": "Single-day Western blot. Synthetic Phase-2 fixture; mirrors a Benchling Notebook Entry with the Protocol template applied.",
+  "revision": "1",
+  "days": [
+    {
+      "name": "Day 1",
+      "blocks": [
+        {
+          "type": "text",
+          "content": "## Equipment needed: SDS-PAGE rig, transfer cell, blocking shaker."
+        },
+        {
+          "type": "step",
+          "id": "blk_lysis",
+          "name": "Cell lysis",
+          "description": "Lyse cells in RIPA buffer for 30 minutes on ice."
+        },
+        {
+          "type": "step",
+          "id": "blk_sds",
+          "name": "Load SDS-PAGE",
+          "description": "Load 20 µg per lane and run for 60 minutes at 120 V.",
+          "instruments": [
+            { "id": "inst_sds_rig", "name": "SDS-PAGE rig" }
+          ]
+        },
+        {
+          "type": "text",
+          "content": "Carefully remove the gel; rinse in transfer buffer."
+        },
+        {
+          "type": "step",
+          "id": "blk_transfer",
+          "name": "Transfer to membrane",
+          "description": "Transfer at 100 V for 90 minutes at 4°C.",
+          "instruments": [
+            { "id": "inst_transfer_cell", "name": "Transfer cell" }
+          ]
+        },
+        {
+          "type": "step",
+          "id": "blk_block",
+          "name": "Block membrane",
+          "description": "Block in 5% milk-TBST for 60 minutes on the orbital shaker.",
+          "instruments": [
+            { "id": "inst_shaker_blot", "name": "Orbital shaker — blot" }
+          ]
+        },
+        {
+          "type": "step",
+          "id": "blk_primary",
+          "name": "Primary antibody",
+          "description": "Incubate with primary antibody overnight at 4°C with gentle shaking.",
+          "duration_minutes": 720,
+          "instruments": [
+            { "id": "inst_shaker_blot", "name": "Orbital shaker — blot" }
+          ]
+        },
+        {
+          "type": "step",
+          "id": "blk_image",
+          "name": "Image blot",
+          "description": "Image on the chemiluminescence imager.",
+          "duration_minutes": 5,
+          "instruments": [
+            { "id": "inst_chemi_imager", "name": "Chemiluminescence imager" }
+          ]
+        }
+      ]
+    }
+  ]
+}
