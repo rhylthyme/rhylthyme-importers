@@ -15,14 +15,14 @@ Strategy
    * Parse ingredient lines into ``{name, measure}`` pairs using the
      RecipeNLG ``NER`` column as the canonical name.
    * Build a Rhylthyme program JSON via
-     ``rhylthyme_web._universal.program_builder.build_program``.
+     ``rhylthyme_server._universal.program_builder.build_program``.
    * Stamp ``metadata.importSource = 'RecipeNLG'`` and
      ``metadata.sourceUrl`` for provenance.
 4. Dedup against rows already imported (queries the canonical owner's
    ``metadata->>'sourceUrl'`` once at start, holds the set in memory).
 5. Bulk insert into ``programs`` in batches of up to 50 rows.
 
-Env vars (loaded from rhylthyme-web/.env):
+Env vars (loaded from rhylthyme-server/.env):
 - SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
 - RHYLTHYME_RECIPES_USER_ID (optional, defaults to canonical UID)
 
@@ -67,12 +67,12 @@ from urllib.parse import urlparse
 _THIS_DIR = Path(__file__).resolve().parent
 _IMPORTERS_ROOT = _THIS_DIR.parent.parent  # rhylthyme-importers/
 _REPO_ROOT = _IMPORTERS_ROOT.parent  # rhylthyme-split/
-_WEB_SRC = _REPO_ROOT / "rhylthyme-web" / "src"
+_WEB_SRC = _REPO_ROOT / "rhylthyme-server" / "src"
 if _WEB_SRC.exists() and str(_WEB_SRC) not in sys.path:
     sys.path.insert(0, str(_WEB_SRC))
 
-from rhylthyme_web._universal.program_builder import build_program  # noqa: E402
-from rhylthyme_web._universal.types import (  # noqa: E402
+from rhylthyme_server._universal.program_builder import build_program  # noqa: E402
+from rhylthyme_server._universal.types import (  # noqa: E402
     ExtractedRecipe,
     ExtractedStep,
     Ingredient,

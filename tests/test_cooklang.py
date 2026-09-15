@@ -347,6 +347,104 @@ class TestTracks:
         rest_step_id = prep["steps"][-1]["stepId"]  # last prep step before melt
         assert melt["startTrigger"]["stepId"] == rest_step_id
 
+    def test_renamed_intermediate_still_chains_via_continuation(self, importer):
+        """Ingredient-producer tracking alone would find no producer for
+        '@batter' (it was never produced under that name — the mixing step
+        only produced 'flour'/'water'), so this depends entirely on the
+        cookware-continuation signal to get a real startTrigger instead of
+        a spurious programStart."""
+        content = (
+            "Melt the @butter in a #frying pan{}.\n\n"
+            "Pour in the @batter and cook for ~{2%minutes}."
+        )
+        result = importer.import_from_content(content)
+        assert result.success
+        stovetop = result.program["tracks"][0]["steps"]
+        assert stovetop[0]["startTrigger"] == {"type": "programStart"}
+        assert stovetop[1]["startTrigger"] == {
+            "type": "afterStep", "stepId": stovetop[0]["stepId"],
+        }
+
+    def test_independent_bowls_merge_at_combine_step(self, importer):
+        """Two threads that never share cookware or ingredient names until a
+        later step explicitly reuses both of their tagged ingredients should
+        produce a real logic:"all" merge referencing both producer steps —
+        this is the actual new capability layered ingredient-producer
+        tracking adds on top of the pre-existing document-order default."""
+        content = (
+            "Cream @butter{115%g} and @sugar{200%g} in a #bowl{}.\n\n"
+            "Sift @flour{80%g} and @salt{1%tsp} in a #separate bowl{}.\n\n"
+            "Fold the @flour and @butter mixtures together in a #bowl{}."
+        )
+        result = importer.import_from_content(content)
+        assert result.success
+        prep = next(t for t in result.program["tracks"] if t["trackId"] == "prep")
+        cream_step, sift_step, fold_step = prep["steps"]
+
+        trigger = fold_step["startTrigger"]
+        assert trigger["logic"] == "all"
+        referenced = {t["stepId"] for t in trigger["triggers"]}
+        assert referenced == {cream_step["stepId"], sift_step["stepId"]}
+
+    def test_continuation_step_becomes_new_producer_for_inherited_ingredients(self, importer):
+        """A step that continues cooking (same bowl, no re-tagging) must take
+        over producer ownership of everything the step it continues from
+        owned — not just its own newly-tagged ingredients. Otherwise a later
+        step referencing an earlier tag by name (e.g. '@butter' after a
+        'whisk in the eggs' step that never re-tags butter) resolves to the
+        stale original producer instead of the continuation, silently
+        skipping whatever the continuation step added on top."""
+        content = (
+            "Cream @butter{115%g} and @sugar{200%g} in a #bowl{}.\n\n"
+            "Whisk in @vanilla extract{5%mL} and @eggs{2}.\n\n"
+            "Sift @flour{280%g} and @salt{3%g} in a #separate bowl{}.\n\n"
+            "Fold the @flour and @butter mixtures together in a #bowl{}."
+        )
+        result = importer.import_from_content(content)
+        assert result.success
+        prep = next(t for t in result.program["tracks"] if t["trackId"] == "prep")
+        cream_step, whisk_step, sift_step, fold_step = prep["steps"]
+
+        # The whisk step continues from cream (same bowl, no new cookware).
+        assert whisk_step["startTrigger"] == {
+            "type": "afterStep", "stepId": cream_step["stepId"],
+        }
+        # Fold references "@butter" again — this must resolve to whisk (the
+        # step that now owns butter/sugar/vanilla/eggs), not back to the
+        # stale cream step, or the eggs/vanilla whisk added would be
+        # silently dropped from the merge.
+        trigger = fold_step["startTrigger"]
+        assert trigger["logic"] == "all"
+        referenced = {t["stepId"] for t in trigger["triggers"]}
+        assert referenced == {whisk_step["stepId"], sift_step["stepId"]}
+        assert cream_step["stepId"] not in referenced
+
+    def test_meanwhile_keyword_starts_independent_parallel_branch(self, importer):
+        """Explicit 'meanwhile' phrasing is the one positive signal that
+        overrides the sequential document-order default and starts a
+        genuinely independent branch at programStart, enabling real
+        parallel scheduling instead of forced serialization."""
+        content = (
+            "Roast @chicken{1} in the #oven for ~{40%minutes}.\n\n"
+            "Meanwhile, chop @onion{1} and @garlic{2%cloves} in a #bowl{}."
+        )
+        result = importer.import_from_content(content)
+        assert result.success
+        prep = next(t for t in result.program["tracks"] if t["trackId"] == "prep")
+        chop_step = prep["steps"][0]
+        assert chop_step["startTrigger"] == {"type": "programStart"}
+
+    def test_in_a_separate_bowl_starts_independent_parallel_branch(self, importer):
+        content = (
+            "Cream @butter{115%g} and @sugar{200%g} in a #bowl{}.\n\n"
+            "In a separate bowl, whisk @egg{2} until fluffy."
+        )
+        result = importer.import_from_content(content)
+        assert result.success
+        prep = next(t for t in result.program["tracks"] if t["trackId"] == "prep")
+        whisk_step = prep["steps"][1]
+        assert whisk_step["startTrigger"] == {"type": "programStart"}
+
     def test_melt_uses_short_default_duration(self, importer):
         """Untimed 'melt X in pan' should default to ~60s, not the generic
         5-minute stove-burner default. Otherwise butter sits burning between

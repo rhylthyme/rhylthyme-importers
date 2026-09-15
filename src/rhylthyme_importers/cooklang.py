@@ -58,6 +58,14 @@ _CONTEXT_SWITCH_KEYWORDS = (
     "let rest", "let cool",
 )
 
+# Narrower subset of the above: phrases that specifically signal a new,
+# independent thread of work starting (not just "we've moved off the
+# stovetop", which is still sequential — e.g. "remove from heat" or "let
+# cool" continue the same dish, they just stop being active cooking).
+# Only these justify skipping the default chain-to-previous-step fallback
+# below and starting at programStart instead.
+_PARALLEL_BRANCH_KEYWORDS = ("meanwhile", "in another", "in a separate")
+
 
 def _looks_like_cooking_continuation(text: str, timings) -> bool:
     """True if a step with no explicit cookware still appears to be cooking
@@ -223,6 +231,11 @@ class CooklangImporter(BaseImporter):
 
         parsed_steps = []
         prev_cookware: list = []
+        # Index (into parsed_steps) of the step that most recently
+        # established the "current" cookware — either by naming it
+        # explicitly or by continuing it. Lets _build_tracks resolve a
+        # continuation step's real dependency once step ids are assigned.
+        prev_cookware_step_idx: Optional[int] = None
         for i, step in enumerate(recipe.steps):
             text = _step_to_text(step)
             if not text:
@@ -235,11 +248,15 @@ class CooklangImporter(BaseImporter):
             # cookware from the previous cooking step. Keeps steps like
             # "Pour in a ladle of batter and cook for 1–2 minutes" on the
             # stovetop track instead of falling back to prep-work.
+            continuation_of_idx: Optional[int] = None
             if step.cookware:
                 cookware = list(step.cookware)
                 prev_cookware = cookware
+                prev_cookware_step_idx = len(parsed_steps)
             elif prev_cookware and _looks_like_cooking_continuation(text, timings):
                 cookware = prev_cookware
+                continuation_of_idx = prev_cookware_step_idx
+                prev_cookware_step_idx = len(parsed_steps)
             else:
                 cookware = []
 
@@ -261,6 +278,7 @@ class CooklangImporter(BaseImporter):
                     "duration": duration,
                     "ingredients": step.ingredients,
                     "cookware_names": [cw.name.lower() for cw in cookware],
+                    "_continuation_of_idx": continuation_of_idx,
                 }
             )
 
@@ -364,10 +382,33 @@ class CooklangImporter(BaseImporter):
         return {"type": "fixed", "seconds": _TASK_DEFAULTS.get(task, 180)}
 
     def _build_tracks(self, parsed_steps: List[Dict]) -> List[Dict[str, Any]]:
-        """Group steps into parallel tracks by task type (cookware-based inference).
+        """Group steps into parallel tracks by task type (cookware-based inference)
+        and compute each step's real startTrigger from two independent
+        dependency signals, unioned together:
 
-        Steps sharing the same task type are sequential within one track.
-        All tracks start at programStart — no cross-track dependencies are inferred.
+        1. Ingredient producer tracking — a data-flow graph over @-tagged
+           ingredients. Each step "produces" every ingredient it references
+           (it becomes the new producer, since it's now part of whatever
+           combined mixture that step creates); a later step referencing
+           an already-produced ingredient depends on its producer. Two or
+           more distinct producers among a step's ingredients means a real
+           merge point (independent prep threads converging).
+        2. Cookware continuation — a step with no explicit cookware that
+           reads as "still cooking on the same pan/oven" depends on
+           whichever step last established that cookware. This exists
+           because CookLang ingredient tags are purely lexical: "Pour in
+           the batter" (untagged) or "Pour in the @batter" (a freshly
+           invented name never `@`-produced under that name) both carry
+           zero ingredient-producer signal on their own, so relying on
+           ingredient tracking alone would silently drop this dependency.
+
+        A step with candidates from neither signal is a genuine
+        independent starting point (new cookware, new/untracked
+        ingredients, no continuation cue) and starts at programStart —
+        this is what lets truly parallel prep (e.g. creaming butter and
+        sugar in one bowl while separately sifting dry ingredients in
+        another) actually schedule in parallel instead of being forced
+        into one artificial linear chain.
         """
         _TRACK_META = {
             "oven":          ("oven",          "Oven"),
@@ -387,19 +428,76 @@ class CooklangImporter(BaseImporter):
             s["_track_id"] = track_id
             s["_step_id"] = f"{track_id}_{bucket_counters[track_id]:02d}"
 
-        # Pass 2 — assemble tracks. Dependencies follow the RECIPE order rather
-        # than per-track ordering. This keeps ingredient/cookware handoffs
-        # correct: "melt butter" (stovetop) waits for "rest batter" (prep) to
-        # finish so the butter doesn't sit on a hot pan for 15 minutes.
+        idx_to_step_id = {i: s["_step_id"] for i, s in enumerate(parsed_steps)}
+
+        # Pass 2 — assemble tracks, resolving each step's startTrigger from
+        # the union of ingredient-producer and cookware-continuation signals.
         tracks_by_id: Dict[str, Dict[str, Any]] = {}
+        producer_of: Dict[str, str] = {}  # ingredient name (lowercased) -> producing stepId
+        # Every ingredient key a step "owns" — either tagged directly on it
+        # or inherited from whatever it continues. Needed so a step that
+        # continues cooking (e.g. "whisk in the eggs") without re-tagging
+        # earlier ingredients still becomes their producer going forward;
+        # otherwise a later step referencing one of those earlier tags by
+        # name would resolve to the stale original step instead of the
+        # continuation, silently skipping everything the continuation added.
+        owned_by_step: Dict[str, set] = {}
         for i, s in enumerate(parsed_steps):
+            step_id = s["_step_id"]
             track_id = s["_track_id"]
             _, track_name = _TRACK_META.get(s["task"], (s["task"], s["task"].title()))
 
-            if i == 0:
+            candidates: List[str] = []
+            seen: set = set()
+
+            def _add_candidate(sid: Optional[str]) -> None:
+                if sid and sid != step_id and sid not in seen:
+                    seen.add(sid)
+                    candidates.append(sid)
+
+            own_this_step: set = set()
+            for ing in s["ingredients"]:
+                key = ing.name.strip().lower()
+                _add_candidate(producer_of.get(key))
+                own_this_step.add(key)
+
+            continuation_idx = s.get("_continuation_of_idx")
+            if continuation_idx is not None:
+                cont_step_id = idx_to_step_id.get(continuation_idx)
+                _add_candidate(cont_step_id)
+                own_this_step |= owned_by_step.get(cont_step_id, set())
+
+            # Neither signal fired — this step neither continues an
+            # ingredient's producer nor carries cookware forward (it names
+            # its own cookware, or names none at all). Default to chaining
+            # after the immediately preceding step, same as the recipe's
+            # narrative order, UNLESS the step's own text explicitly signals
+            # an independent parallel thread ("meanwhile", "in another
+            # bowl", "in a separate pan") — that's the one positive signal
+            # that overrides the sequential default and starts a real
+            # parallel branch.
+            if not candidates and i > 0:
+                text_l = s["text"].lower()
+                if not any(kw in text_l for kw in _PARALLEL_BRANCH_KEYWORDS):
+                    _add_candidate(parsed_steps[i - 1]["_step_id"])
+
+            if not candidates:
                 trigger: Dict[str, Any] = {"type": "programStart"}
+            elif len(candidates) == 1:
+                trigger = {"type": "afterStep", "stepId": candidates[0]}
             else:
-                trigger = {"type": "afterStep", "stepId": parsed_steps[i - 1]["_step_id"]}
+                trigger = {
+                    "logic": "all",
+                    "triggers": [{"type": "afterStep", "stepId": c} for c in candidates],
+                }
+
+            # This step becomes the new producer for everything it owns —
+            # its own tagged ingredients plus anything inherited above —
+            # so downstream steps referencing any of them by name chain to
+            # the most recent step that actually touched them.
+            owned_by_step[step_id] = own_this_step
+            for key in own_this_step:
+                producer_of[key] = step_id
 
             track = tracks_by_id.setdefault(
                 track_id,
@@ -407,7 +505,7 @@ class CooklangImporter(BaseImporter):
             )
             track["steps"].append(
                 {
-                    "stepId": s["_step_id"],
+                    "stepId": step_id,
                     "name": s["name"],
                     "description": s["text"],
                     "task": s["task"],

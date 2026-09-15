@@ -152,8 +152,8 @@ The short version:
   ```
 - **Run the SQL migrations** (idempotent):
   ```bash
-  psql $SUPABASE_DB_URL -f rhylthyme-web/sql/user_benchling.sql
-  psql $SUPABASE_DB_URL -f rhylthyme-web/sql/benchling_imports.sql
+  psql $SUPABASE_DB_URL -f rhylthyme-server/sql/user_benchling.sql
+  psql $SUPABASE_DB_URL -f rhylthyme-server/sql/benchling_imports.sql
   ```
 - **Cache**: converted programs are stored per `(tenant,
   protocol_id, revision)` in `benchling_imports`. Repeat imports hit

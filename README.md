@@ -117,6 +117,36 @@ rhylthyme-import search "western blot" -i protocolsio
 rhylthyme-import import "https://www.protocols.io/view/western-blot-..." -o protocol.json --pretty
 ```
 
+## Enrichment is not part of `BaseImporter`
+
+An importer reads *structure*, not meaning, so it produces one track of
+steps chained head-to-tail. Splitting that into parallel tracks with
+cross-track triggers takes a language model, and that lives in
+**rhylthyme-server**, not here:
+`rhylthyme_server._prompting.enrich_program` runs turn 4 of the
+`plan_schedule` prompt over the program an importer has already returned,
+exposed as `enrich: true` on `POST /api/import` and on the MCP
+`import_from_source` tool.
+
+Nothing in this package changes for it. `BaseImporter` has no `enrich`
+hook, no Anthropic dependency and no network requirement beyond the
+source API it already talks to; importers stay deterministic, offline-
+testable and free to run without an `ANTHROPIC_API_KEY`. Enrichment is a
+post-processor over `ImportResult.program`, opt-in per request and
+rate-limited, and a failed enrichment returns the importer's program
+unchanged.
+
+Two conventions make an importer enrich well:
+
+- **Keep the source sentence on the step.** `enrich` reads
+  `step["description"]` (falling back to `step["notes"]`) as the step's
+  `metadata.sourceSpan.quote`, so the enriched program can say which
+  words each step came from. protocols.io's importer already does this.
+- **Keep `stepId`s stable.** Enrichment preserves every imported
+  `stepId`, and marks any step it adds with `metadata.inferred = true`;
+  the diff between the two is how the UI tells read-from-source apart
+  from inferred.
+
 ## CLI Commands
 
 ```bash

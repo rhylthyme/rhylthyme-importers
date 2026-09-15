@@ -68,7 +68,7 @@ DEFAULT_RECIPES_USER_ID = '80a129d0-2137-4cca-bf31-f21a41aee815'
 
 
 # ---------------------------------------------------------------------------
-# Optional .env loader — looks in cwd, repo root, and rhylthyme-web/.
+# Optional .env loader — looks in cwd, repo root, and rhylthyme-server/.
 # Mirrors the loader used by other repo scripts so reproductions don't need
 # users to manually export env vars.
 # ---------------------------------------------------------------------------
@@ -77,8 +77,8 @@ def _load_dotenv_if_present():
     here = Path.cwd()
     candidates = [
         here / '.env',
-        here / 'rhylthyme-web' / '.env',
-        Path(__file__).resolve().parents[3] / 'rhylthyme-web' / '.env',
+        here / 'rhylthyme-server' / '.env',
+        Path(__file__).resolve().parents[3] / 'rhylthyme-server' / '.env',
         Path(__file__).resolve().parents[3] / '.env',
     ]
     for p in candidates:

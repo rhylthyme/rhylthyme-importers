@@ -8,7 +8,7 @@ writes the returned ``fal.media`` URL back into ``program_json.metadata.thumbnai
 Costs: FLUX.1 [schnell] is $0.003/image (≈ $15 for 5K images at the time of
 writing). Verify on https://fal.ai/pricing before large runs.
 
-Env vars (loaded from rhylthyme-web/.env):
+Env vars (loaded from rhylthyme-server/.env):
 - ``FAL_KEY`` — fal.ai API key
 - ``SUPABASE_URL`` / ``SUPABASE_SERVICE_ROLE_KEY``
 - ``RHYLTHYME_RECIPES_USER_ID`` (optional, defaults to the canonical recipes UID)
