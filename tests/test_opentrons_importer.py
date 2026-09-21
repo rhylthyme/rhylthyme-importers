@@ -86,7 +86,7 @@ class TestAstParser:
 
 class TestImporter:
     def test_trivial_protocol_yields_valid_program(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'trivial.py'))
         assert result.success, result.error
         prog = result.program
@@ -113,13 +113,13 @@ class TestImporter:
         assert prog['resourceConstraints'][0]['maxConcurrent'] == 1
 
     def test_non_protocol_python_file_is_rejected(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_source('x = 1\nprint(x)\n')
         assert not result.success
         assert 'run()' in (result.error or '')
 
     def test_can_import_detects_py_extension(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         assert importer.can_import('protocol.py')
         assert not importer.can_import('protocol.json')
         assert not importer.can_import('https://example.com/foo')
@@ -262,7 +262,7 @@ class TestPhase2Builder:
     on left + single on right."""
 
     def test_pcr_setup_renders_one_mount_plus_protocol_track(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'pcr_setup.py'))
         assert result.success
         prog = result.program
@@ -272,7 +272,7 @@ class TestPhase2Builder:
         assert 'Protocol' in track_names
 
     def test_pause_renders_as_indefinite_manual(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'pcr_setup.py'))
         prog = result.program
         proto_track = next(t for t in prog['tracks'] if t['name'] == 'Protocol')
@@ -286,7 +286,7 @@ class TestPhase2Builder:
         # pause steps.) Either way, the duration is what makes it manual.
 
     def test_delay_renders_as_fixed_duration_with_delay_task(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'pcr_setup.py'))
         prog = result.program
         proto_track = next(t for t in prog['tracks'] if t['name'] == 'Protocol')
@@ -296,7 +296,7 @@ class TestPhase2Builder:
         assert delay_step['duration']['seconds'] == 30
 
     def test_two_mount_protocol_produces_two_tracks_with_constraints(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'serial_dilution.py'))
         prog = result.program
         pipette_tracks = [t for t in prog['tracks'] if t['name'] != 'Protocol']
@@ -314,7 +314,7 @@ class TestPhase2Builder:
         """The simulator's expansion of distribute/transfer/mix into
         low-level events should be reflected in the rendered step count
         per track."""
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'serial_dilution.py'))
         prog = result.program
         left = next(t for t in prog['tracks'] if 'Left:' in t['name'])
@@ -415,7 +415,7 @@ class TestPhase3Builder:
     and tags events with the right task vocabulary."""
 
     def test_elisa_program_has_one_track_per_module(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'elisa.py'))
         assert result.success
         prog = result.program
@@ -428,7 +428,7 @@ class TestPhase3Builder:
         assert any('Absorbance' in n for n in names)
 
     def test_elisa_emits_resource_constraint_per_module(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'elisa.py'))
         prog = result.program
         # 1 pipette + 4 modules = 5 constraints, each maxConcurrent=1.
@@ -436,7 +436,7 @@ class TestPhase3Builder:
         assert all(rc['maxConcurrent'] == 1 for rc in prog['resourceConstraints'])
 
     def test_module_steps_use_protocols_io_task_vocab(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'elisa.py'))
         prog = result.program
         tasks = {
@@ -463,7 +463,7 @@ class TestPhase3Builder:
             '        {"temperature": 60, "hold_time_seconds": 30},\n'
             '    ], repetitions=10)\n'
         )
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_source(source)
         prog = result.program
         tc_track = next(t for t in prog['tracks'] if 'Thermocycler' in t['name'])
@@ -480,7 +480,7 @@ class TestPhase4Flex:
     """Flex pipettes (1ch / 8ch / 96ch) + gripper."""
 
     def test_flex_96_channel_routes_to_dedicated_track(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'cell_culture_passage.py'))
         assert result.success
         prog = result.program
@@ -493,7 +493,7 @@ class TestPhase4Flex:
         assert any(n == 'Flex Gripper' for n in names)
 
     def test_flex_96_emits_shared_gantry_constraint(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'cell_culture_passage.py'))
         prog = result.program
         constraints = prog['resourceConstraints']
@@ -505,7 +505,7 @@ class TestPhase4Flex:
         assert pipetting_constraints[0]['maxConcurrent'] == 1
 
     def test_gripper_renders_with_its_own_resource_constraint(self):
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_url(str(FIXTURES / 'cell_culture_passage.py'))
         prog = result.program
         constraints = prog['resourceConstraints']
@@ -551,7 +551,7 @@ class TestPhase4Flex:
             '    p.pick_up_tip()\n'
             '    p.drop_tip()\n'
         )
-        importer = OpentronsImporter()
+        importer = OpentronsImporter(allow_local_files=True)
         result = importer.import_from_source(source)
         prog = result.program
         left = next(t for t in prog['tracks'] if t['name'].startswith('Left:'))
@@ -559,3 +559,19 @@ class TestPhase4Flex:
         # (channel-count token gets normalised).
         assert '8-channel' in left['name']
         assert 'Flex' in left['name']
+
+
+class TestLocalFilesAreOptIn:
+    """An importer reachable from user input must not read local paths."""
+
+    def test_default_importer_refuses_a_local_path(self):
+        result = OpentronsImporter().import_from_url(str(FIXTURES / 'trivial.py'))
+        assert result.success is False
+        assert 'local files are not accepted' in result.error
+
+    def test_the_registered_importer_is_the_default_kind(self):
+        from rhylthyme_importers import ImporterRegistry
+
+        registered = ImporterRegistry.get('opentrons')
+        assert registered is not None
+        assert getattr(registered, 'allow_local_files', False) is False

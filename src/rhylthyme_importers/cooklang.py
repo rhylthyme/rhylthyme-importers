@@ -181,6 +181,12 @@ class CooklangImporter(BaseImporter):
     description = "Import CookLang (.cook) recipe files"
     supported_domains: List[str] = []
 
+    def __init__(self, allow_local_files: bool = False):
+        # Reading a local path is for the command line and for files this
+        # process wrote itself (an upload). An importer reachable from user
+        # input must never do it: whatever it reads comes back as recipe text.
+        self.allow_local_files = allow_local_files
+
     def can_import(self, url_or_query: str) -> bool:
         return _is_cook_input(url_or_query)
 
@@ -191,7 +197,7 @@ class CooklangImporter(BaseImporter):
         """Import from a local path, direct URL, or GitHub blob URL."""
         try:
             fetch_url = github_blob_to_raw(url)
-            if os.path.exists(url):
+            if getattr(self, 'allow_local_files', False) and os.path.exists(url):
                 content = Path(url).read_text(encoding="utf-8")
                 source_name = Path(url).stem
             else:

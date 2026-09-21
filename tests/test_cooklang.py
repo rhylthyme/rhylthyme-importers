@@ -577,3 +577,31 @@ class TestErrorHandling:
 
     def test_search_returns_empty_list(self, importer):
         assert importer.search("pasta") == []
+
+
+def test_a_default_importer_never_reads_a_local_path(tmp_path, monkeypatch):
+    """Whatever Cooklang reads comes back as recipe text, so an importer
+    reachable from user input must not open files."""
+    import requests
+
+    from rhylthyme_importers.cooklang import CooklangImporter
+
+    secret = tmp_path / "secrets.env"
+    secret.write_text("API_KEY=super-secret-value-123\n")
+
+    def no_such_url(url, **kw):
+        raise requests.exceptions.MissingSchema(f"Invalid URL {url!r}")
+
+    monkeypatch.setattr(requests, "get", no_such_url)
+    result = CooklangImporter().import_from_url(str(secret))
+    assert result.success is False
+    assert "super-secret-value-123" not in json_dump(result)
+
+    allowed = CooklangImporter(allow_local_files=True).import_from_url(str(secret))
+    assert allowed.success is True, "the command line and the upload route opt in"
+
+
+def json_dump(result):
+    import json
+
+    return json.dumps({"program": result.program, "error": result.error}, default=str)

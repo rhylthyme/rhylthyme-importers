@@ -45,7 +45,7 @@ def main() -> None:
         source = path.read_text(encoding='utf-8')
         filename = str(path)
 
-    importer = OpentronsImporter()
+    importer = OpentronsImporter(allow_local_files=True)  # a command-line tool reads the file it is given
     result = importer.import_from_source(source, filename=filename)
     if not result.success:
         sys.exit(f'error: {result.error}')

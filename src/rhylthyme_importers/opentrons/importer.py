@@ -47,6 +47,12 @@ class OpentronsImporter(BaseImporter):
     description = 'Import an Opentrons Protocol API v2 (.py) file'
     supported_domains: List[str] = []  # file-based, no URL surface
 
+    def __init__(self, allow_local_files: bool = False):
+        # import_from_url() reads a LOCAL path. That is for the command line
+        # and for files this process wrote itself (an upload); an importer
+        # reachable from user input gets the source as text instead.
+        self.allow_local_files = allow_local_files
+
     def can_import(self, url_or_query: str) -> bool:
         if not isinstance(url_or_query, str):
             return False
@@ -58,6 +64,11 @@ class OpentronsImporter(BaseImporter):
         return []
 
     def import_from_url(self, url: str) -> ImportResult:
+        if not getattr(self, 'allow_local_files', False):
+            return ImportResult(
+                success=False,
+                error='local files are not accepted here; pass the protocol source as text',
+            )
         path = Path(url)
         if not path.exists():
             return ImportResult(success=False, error=f'no such file: {url}')
