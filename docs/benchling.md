@@ -144,21 +144,10 @@ The short version:
 
 ## Operational notes
 
-- **Set the encryption key once** and back it up. Losing it makes every
-  stored token undecryptable.
-  ```bash
-  openssl rand -hex 32
-  vercel env add BENCHLING_KEY_ENCRYPTION_KEY production
-  ```
-- **Run the SQL migrations** (idempotent):
-  ```bash
-  psql $SUPABASE_DB_URL -f rhylthyme-server/sql/user_benchling.sql
-  psql $SUPABASE_DB_URL -f rhylthyme-server/sql/benchling_imports.sql
-  ```
-- **Cache**: converted programs are stored per `(tenant,
-  protocol_id, revision)` in `benchling_imports`. Repeat imports hit
-  the cache (and bump `hit_count`); the live Benchling round-trip is
-  skipped entirely.
+Token storage, the encryption key and the import cache belong to the
+rhylthyme-server deployment and are documented there, not in this package.
+Converted programs are cached per `(tenant, protocol_id, revision)`, so a
+repeat import of an unchanged protocol skips the live Benchling round-trip.
 
 ---
 
