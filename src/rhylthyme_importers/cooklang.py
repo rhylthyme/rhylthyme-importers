@@ -156,6 +156,20 @@ def _strip_metadata_lines(text: str) -> str:
     return re.sub(r'\s+', ' ', cleaned).strip()
 
 
+def _display_name(name: str) -> str:
+    """An ingredient's name as prose. A reference to another recipe is a
+    path (`@./Shared/Pizza Dough{6%balls}`); its name is the last part."""
+    name = (name or "").strip()
+    if "/" in name:
+        name = name.rstrip("/").rsplit("/", 1)[-1].strip()
+        # Recipe files are Title Case ("Pizza Dough"); in a sentence the
+        # ingredient is "pizza dough".
+        words = name.split()
+        if words and all(w[:1].isupper() and w[1:] == w[1:].lower() for w in words):
+            name = name.lower()
+    return name
+
+
 def _step_to_text(step) -> str:
     """Reconstruct plain prose text from a cooklang-py Step."""
     parts = []
@@ -165,7 +179,7 @@ def _step_to_text(step) -> str:
         elif type(item).__name__ == "Timing":
             parts.append(_format_timing(item))
         elif hasattr(item, "name"):
-            parts.append(item.name)
+            parts.append(_display_name(item.name))
     return _strip_metadata_lines("".join(parts).strip())
 
 
@@ -554,7 +568,7 @@ class CooklangImporter(BaseImporter):
                     amt = str(ing.quantity.amount) if ing.quantity.amount is not None else ""
                     unit = str(ing.quantity.unit) if ing.quantity.unit else ""
                     measure = f"{amt} {unit}".strip()
-                seen[key] = {"name": ing.name.strip(), "measure": measure}
+                seen[key] = {"name": _display_name(ing.name), "measure": measure}
         return list(seen.values())
 
     def _build_constraints(self, used_tasks: set) -> List[Dict[str, Any]]:

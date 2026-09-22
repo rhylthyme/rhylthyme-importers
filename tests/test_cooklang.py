@@ -661,3 +661,27 @@ def test_steps_in_one_track_never_overlap_whatever_the_ingredient_flow_says():
         for step in steps:
             d = step["duration"]; t += d.get("seconds") or d.get("defaultSeconds")
     assert program["tracks"]
+
+
+def test_recipe_references_read_as_plain_ingredients():
+    """`@./Shared/Pizza Dough{6%balls}` refers to another recipe file; the
+    step text and the ingredient list should say "pizza dough", not the path."""
+    from rhylthyme_importers.cooklang import CooklangImporter
+
+    text = "Use a #spatula to remove the @./Shared/Pizza Dough{6%balls} from the dough box and place it in the @flour.\n"
+    program = CooklangImporter().import_from_content(text, source_name="Pizza").program
+    step = program["tracks"][0]["steps"][0]
+    assert step["name"] == "Use a spatula to remove the pizza dough"
+    assert "./Shared" not in step["description"] and "pizza dough" in step["description"]
+    assert {i["name"]: i["measure"] for i in program["metadata"]["ingredients"]}["pizza dough"] == "6 balls"
+
+
+def test_step_names_stop_at_the_reason_and_never_dangle():
+    from rhylthyme_importers.base import BaseImporter
+
+    n = BaseImporter.make_step_name
+    assert n("Preheat your outdoor oven so it\u2019s around 450/500\u00b0C (842/932\u00b0F).") == "Preheat your outdoor oven"
+    assert n("Prepare your pizza toppings because from now on you wanna work fast.") == "Prepare your pizza toppings"
+    assert n("Spike up your fire by standing up some small logs of wood against the back panel.") == "Spike up your fire"
+    assert n("Use a spatula to remove the pizza dough from the dough box and place it upside down.") == "Use a spatula to remove the pizza dough"
+    assert n("Mix flour, sugar, and baking powder in a large bowl.") == "Mix flour, sugar, and baking powder"

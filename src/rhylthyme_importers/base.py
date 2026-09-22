@@ -82,17 +82,26 @@ class BaseImporter(ABC):
         # Try to grab the first verb phrase — up to the first period,
         # semicolon, "and", "until", "for about", or parenthetical.
         # Allow commas so we keep "Mix flour, sugar, and baking powder".
+        # A subordinate clause ("so it's around 450°C", "because from now on
+        # you wanna work fast", "by standing up some logs") explains the
+        # step; the name is the step.
         m = re.match(
             r'([A-Za-z][^;.()]*?)'
-            r'(?:\s+(?:until|for about|then|while|making sure|stirring)\b|[;.()])',
+            r'(?:\s+(?:until|for about|then|while|making sure|stirring|so that|so|because|which|by)\b|[;.()])',
             cleaned,
         )
         name = m.group(1).strip() if m else cleaned
 
-        # Cap at 45 chars on a word boundary
+        # Cap at 45 chars on a word boundary, and never end on a word that
+        # needs what came after it ("remove the pizza dough from the" ->
+        # "remove the pizza dough").
         if len(name) > 45:
             truncated = name[:45].rsplit(' ', 1)[0]
             name = truncated if len(truncated) > 10 else name[:45]
+        name = re.sub(
+            r'(?:\s+(?:the|a|an|and|or|of|to|in|on|at|from|with|into|onto|over|for|your|some|that|this|it|its|is|are|as|but|not))+$',
+            '', name.strip(), flags=re.IGNORECASE,
+        ).rstrip(',:-')
 
         # Capitalise first letter
         if name:
