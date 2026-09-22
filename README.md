@@ -5,8 +5,7 @@ Import plugins for converting external data sources into Rhylthyme programs.
 ## Installation
 
 ```bash
-pip install rhylthyme-importers              # TheMealDB, Spoonacular, protocols.io, Opentrons, Benchling, recipe sites
-pip install "rhylthyme-importers[cooklang]"   # + CookLang .cook files
+pip install rhylthyme-importers      # TheMealDB, Spoonacular, recipe sites, CookLang, protocols.io, Opentrons, Benchling
 ```
 
 Python 3.12 or newer. From a checkout: `pip install -e ./rhylthyme-importers`.
@@ -61,7 +60,7 @@ for how tracks and cross-track triggers are added afterwards.
 | [`themealdb`](#themealdb) | TheMealDB, a free recipe API | meal id or URL | nothing |
 | [`spoonacular`](#spoonacular) | Spoonacular recipe API | recipe id or URL | `SPOONACULAR_API_KEY` |
 | [`recipe-scrapers`](#recipe-sites-recipe-scrapers) | several hundred recipe websites | recipe page URL | nothing |
-| [`cooklang`](#cooklang) | CookLang `.cook` files | raw or GitHub URL, or a file | `[cooklang]` extra |
+| [`cooklang`](#cooklang) | CookLang `.cook` files | raw or GitHub URL, or a file | nothing |
 | [`protocolsio`](#protocolsio) | protocols.io | protocol URL or id | `PROTOCOLS_IO_TOKEN` |
 | [`opentrons`](#opentrons) | Opentrons Protocol API v2 `.py` | file or pasted source | nothing |
 | [`benchling`](#benchling) | Benchling protocols, workflow tasks, notebook entries | protocol URL or id | a Benchling API token |
@@ -123,12 +122,11 @@ rhylthyme import https://www.seriouseats.com/the-best-chili-recipe -o chili.json
 ### CookLang
 
 Individual [CookLang](https://cooklang.org/) `.cook` files, from a raw URL,
-a GitHub blob URL (converted to raw automatically) or a local file. Needs the
-`cooklang` extra: `pip install "rhylthyme-importers[cooklang]"`.
+a GitHub blob URL (converted to raw automatically) or a local file.
 
 ```bash
 rhylthyme import "https://github.com/cooklang/cookcli/blob/main/seed/Neapolitan%20Pizza.cook" -o pizza.json
-rhylthyme import "Neapolitan Pizza.cook" -i cooklang
+rhylthyme import "Neapolitan Pizza.cook" -i cooklang     # a .cook file on disk
 ```
 
 ```python
