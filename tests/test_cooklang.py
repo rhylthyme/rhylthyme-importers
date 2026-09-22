@@ -378,9 +378,12 @@ class TestTracks:
         )
         result = importer.import_from_content(content)
         assert result.success
-        prep = next(t for t in result.program["tracks"] if t["trackId"] == "prep")
-        cream_step, sift_step, fold_step = prep["steps"]
-
+        steps = sorted((s for t in result.program["tracks"] for s in t["steps"]), key=lambda s: s["stepId"])
+        cream_step, sift_step, fold_step = steps[0], steps[1], steps[2]
+        # The second bowl is a parallel branch, so it is on its own track and
+        # the fold, which needs both, waits for both.
+        assert {t["trackId"] for t in result.program["tracks"]} == {"prep", "prep-2"}
+        assert sift_step["startTrigger"] == {"type": "programStart"}
         trigger = fold_step["startTrigger"]
         assert trigger["logic"] == "all"
         referenced = {t["stepId"] for t in trigger["triggers"]}
@@ -402,8 +405,9 @@ class TestTracks:
         )
         result = importer.import_from_content(content)
         assert result.success
-        prep = next(t for t in result.program["tracks"] if t["trackId"] == "prep")
-        cream_step, whisk_step, sift_step, fold_step = prep["steps"]
+        steps = sorted((s for t in result.program["tracks"] for s in t["steps"]), key=lambda s: s["stepId"])
+        assert len(steps) == 4
+        cream_step, whisk_step, sift_step, fold_step = steps
 
         # The whisk step continues from cream (same bowl, no new cookware).
         assert whisk_step["startTrigger"] == {
@@ -441,9 +445,13 @@ class TestTracks:
         )
         result = importer.import_from_content(content)
         assert result.success
-        prep = next(t for t in result.program["tracks"] if t["trackId"] == "prep")
-        whisk_step = prep["steps"][1]
+        # Two things happening at once cannot share a track (steps in a
+        # track are sequential), so the branch gets its own.
+        tracks = {t["trackId"]: t for t in result.program["tracks"]}
+        assert set(tracks) == {"prep", "prep-2"}
+        whisk_step = tracks["prep-2"]["steps"][0]
         assert whisk_step["startTrigger"] == {"type": "programStart"}
+        assert tracks["prep-2"]["name"] == "Preparation (2)"
 
     def test_melt_uses_short_default_duration(self, importer):
         """Untimed 'melt X in pan' should default to ~60s, not the generic
@@ -622,3 +630,34 @@ def test_a_percent_encoded_url_gives_a_readable_name(monkeypatch):
     result = CooklangImporter().import_from_url("https://example.org/seed/Neapolitan%20Pizza.cook")
     assert result.success, result.error
     assert result.program["name"] == "Neapolitan Pizza"
+
+
+def test_steps_in_one_track_never_overlap_whatever_the_ingredient_flow_says():
+    """A step whose ingredients all came from an early step used to be chained
+    to that step alone, so it was scheduled on top of the steps before it in
+    the same track and the program failed validation (seen on a pizza recipe:
+    'spike up your fire' depended on step 2 while sitting fifth in the track)."""
+    from rhylthyme_importers.cooklang import CooklangImporter
+
+    text = (
+        "Preheat the #oven{} to 250C for ~{30%minutes}.\n\n"
+        "Chop the @basil{1%bunch} and grate the @cheese{200%g}.\n\n"
+        "Stretch the @dough{250%g} on the board.\n\n"
+        "Top the base with @tomato{100%g}.\n\n"
+        "Sprinkle the @basil{} and @cheese{} over the top.\n\n"
+        "Slide it into the oven and bake ~{5%minutes}.\n"
+    )
+    program = CooklangImporter().import_from_content(text, source_name="Pizza").program
+    by_track = {t["trackId"]: t["steps"] for t in program["tracks"]}
+    for steps in by_track.values():
+        for prev, step in zip(steps, steps[1:]):
+            trig = step["startTrigger"]
+            deps = {trig.get("stepId")} | {t.get("stepId") for t in trig.get("triggers", [])}
+            assert prev["stepId"] in deps, f"{step['stepId']} does not wait for {prev['stepId']}"
+    # and the schedule really has no overlap
+    ends = {}
+    for steps in by_track.values():
+        t = 0
+        for step in steps:
+            d = step["duration"]; t += d.get("seconds") or d.get("defaultSeconds")
+    assert program["tracks"]

@@ -449,6 +449,8 @@ class CooklangImporter(BaseImporter):
         # name would resolve to the stale original step instead of the
         # continuation, silently skipping everything the continuation added.
         owned_by_step: Dict[str, set] = {}
+        last_in_track: Dict[str, str] = {}
+        branch_counts: Dict[str, int] = {}
         for i, s in enumerate(parsed_steps):
             step_id = s["_step_id"]
             track_id = s["_track_id"]
@@ -487,6 +489,24 @@ class CooklangImporter(BaseImporter):
                 text_l = s["text"].lower()
                 if not any(kw in text_l for kw in _PARALLEL_BRANCH_KEYWORDS):
                     _add_candidate(parsed_steps[i - 1]["_step_id"])
+
+            # An independent step ("in a separate bowl") whose track is
+            # already busy is a parallel branch: it gets its own track, so it
+            # really runs alongside instead of overlapping.
+            if not candidates and track_id in last_in_track:
+                branch_counts[track_id] = branch_counts.get(track_id, 1) + 1
+                n = branch_counts[track_id]
+                track_id = f"{track_id}-{n}"
+                track_name = f"{track_name} ({n})"
+                s["_track_id"] = track_id
+
+            # Steps in one track run one after another, whatever the
+            # ingredient flow says, so the track's previous step is always a
+            # dependency too. Without it a step that only depends on an
+            # early step could be scheduled on top of the step before it in
+            # the same track, and the program would not validate.
+            _add_candidate(last_in_track.get(track_id))
+            last_in_track[track_id] = step_id
 
             if not candidates:
                 trigger: Dict[str, Any] = {"type": "programStart"}
