@@ -219,20 +219,32 @@ class SlideDeckImporter(BaseImporter):
         current_slides: List[Dict] = []
         section_index = 0
 
+        pending_header: Optional[Dict] = None  # a header with nothing under it yet
+
         for slide in slides_data:
             if slide["is_section_header"]:
-                # Flush previous section
+                # Flush previous section. A header that no content slide
+                # followed ("Demo", "Questions?") is a slide the speaker
+                # stands on, not an empty section: keep it as its own step,
+                # with whatever timing its notes carry.
                 if current_slides:
                     sections.append((current_section_name, current_slides))
                     section_index += 1
                     current_slides = []
+                elif pending_header is not None:
+                    sections.append((current_section_name, [pending_header]))
+                    section_index += 1
                 current_section_name = slide["title"] or f"Section {section_index + 1}"
+                pending_header = slide
             else:
                 current_slides.append(slide)
+                pending_header = None
 
         # Flush last section
         if current_slides:
             sections.append((current_section_name, current_slides))
+        elif pending_header is not None:
+            sections.append((current_section_name, [pending_header]))
 
         # If no content slides ended up in sections (all were section headers), make one track
         if not sections:

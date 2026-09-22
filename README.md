@@ -110,17 +110,18 @@ land in `metadata`.
 #### CookLang Federation (bulk)
 
 Scrape every recipe in the [Cooklang Federation](https://recipes.cooklang.org/),
-about 76 GitHub repositories, filter out placeholders, and upload to a
-Rhylthyme catalogue. Reproducible and idempotent on re-run.
+about 76 GitHub repositories, and filter out placeholders. Reproducible and
+idempotent on re-run.
 
 ```bash
 rhylthyme-import-cooklang-federation --discover                       # 1. list source repos
 rhylthyme-import-cooklang-federation --import-all --staged-out /tmp/staged.json   # 2. scrape + filter
 rhylthyme-import-cooklang-federation --review /tmp/staged.json        # 3. what passed, what was dropped
 rhylthyme-import-cooklang-federation --refilter /tmp/staged.json      # 4. re-apply edited rules, no re-download
-export SUPABASE_URL=https://xxx.supabase.co SUPABASE_SERVICE_ROLE_KEY=...
-rhylthyme-import-cooklang-federation --upload /tmp/staged.json --idempotent   # 5. upload
 ```
+
+The staged file is a list of programs; `--upload` sends it to a Rhylthyme
+catalogue.
 
 The filter rejects placeholder names (`recipe`, `untitled`, `template`,
 `test`, `Copy of ...`), hash-like or all-digit names, and programs with no
@@ -203,17 +204,15 @@ from rhylthyme_importers import SlideDeckImporter
 SlideDeckImporter().import_from_url("talk.pptx")
 ```
 
-## Catalogue maintenance commands
+## Other commands
 
-The remaining `rhylthyme-*` commands maintain a Rhylthyme catalogue in a
-Supabase project (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) and are not
-needed to import anything: `rhylthyme-backfill-taxonomy` and
-`rhylthyme-clean-titles` (model-assisted classification and title cleanup),
-`rhylthyme-backfill-language`, `rhylthyme-embed-recipes`,
-`rhylthyme-detect-text-thumbs` and `rhylthyme-replace-broken-thumbs`
-(thumbnail quality), `rhylthyme-import-recipe-scrapers` (bulk recipe-site
-mining). Their extra dependencies are the `catalog` extra:
-`pip install "rhylthyme-importers[catalog]"`.
+The remaining `rhylthyme-*` commands (`rhylthyme-backfill-taxonomy`,
+`rhylthyme-clean-titles`, `rhylthyme-backfill-language`,
+`rhylthyme-embed-recipes`, `rhylthyme-detect-text-thumbs`,
+`rhylthyme-replace-broken-thumbs`, `rhylthyme-import-recipe-scrapers`,
+`rhylthyme-sweep-supported-sites`) maintain the public catalogue on
+rhylthyme.com and are not needed to import anything. Their extra
+dependencies are the `catalog` extra.
 
 ## Enrichment is not part of `BaseImporter`
 
@@ -303,22 +302,6 @@ class MyCustomImporter(BaseImporter):
 # Register the importer
 ImporterRegistry.register(MyCustomImporter())
 ```
-
-## Publishing to PyPI
-
-Bump `version` in `pyproject.toml`, then build from a clean export so stray
-local files do not ship, check, and upload (the token lives in `~/.pypirc`):
-
-```bash
-git archive HEAD | tar -x -C /tmp/rhylthyme-importers-release
-python -m build /tmp/rhylthyme-importers-release
-python -m twine check /tmp/rhylthyme-importers-release/dist/*
-python -m twine upload /tmp/rhylthyme-importers-release/dist/*
-git tag v<version> && git push origin v<version>
-```
-
-rhylthyme-server installs this package from PyPI on Vercel, so a fix here
-reaches production only after a release and a server redeploy.
 
 ## License
 
