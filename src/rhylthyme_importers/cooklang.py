@@ -204,7 +204,8 @@ class CooklangImporter(BaseImporter):
                 resp = requests.get(fetch_url, timeout=15)
                 resp.raise_for_status()
                 content = resp.text
-                source_name = Path(fetch_url.split("?")[0]).stem
+                from urllib.parse import unquote
+                source_name = unquote(Path(fetch_url.split("?")[0]).stem)
             return self.import_from_content(content, source_name=source_name, source_url=url)
         except Exception as e:
             return ImportResult(success=False, error=str(e))

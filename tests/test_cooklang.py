@@ -605,3 +605,20 @@ def json_dump(result):
     import json
 
     return json.dumps({"program": result.program, "error": result.error}, default=str)
+
+
+def test_a_percent_encoded_url_gives_a_readable_name(monkeypatch):
+    import requests
+
+    from rhylthyme_importers.cooklang import CooklangImporter
+
+    class Ok:
+        text = "Boil @water{1%l} for ~{10%minutes}.\n"
+
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(requests, "get", lambda url, **kw: Ok())
+    result = CooklangImporter().import_from_url("https://example.org/seed/Neapolitan%20Pizza.cook")
+    assert result.success, result.error
+    assert result.program["name"] == "Neapolitan Pizza"
