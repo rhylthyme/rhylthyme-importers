@@ -284,6 +284,8 @@ class CooklangImporter(BaseImporter):
             task = self._task_from_cookware(cookware)
             duration = self._make_duration(timings, text, task)
 
+            if re.fullmatch(r"=+\s*[^=]*\s*=+|#+\s+.*", text.strip()) or text.lstrip().startswith(">"):
+                continue  # a section header ("== Fillings ==") or a note ("> ..."), not a step
             step_name = self.make_step_name(text)
             if step_name == "Prepare":
                 # Fall back to named timer or generic ordinal

@@ -684,4 +684,30 @@ def test_step_names_stop_at_the_reason_and_never_dangle():
     assert n("Prepare your pizza toppings because from now on you wanna work fast.") == "Prepare your pizza toppings"
     assert n("Spike up your fire by standing up some small logs of wood against the back panel.") == "Spike up your fire"
     assert n("Use a spatula to remove the pizza dough from the dough box and place it upside down.") == "Use a spatula to remove the pizza dough"
-    assert n("Mix flour, sugar, and baking powder in a large bowl.") == "Mix flour, sugar, and baking powder"
+    assert n("Mix flour, sugar, and baking powder in a large bowl.") == "Mix flour, sugar, and baking powder in a large bowl"
+    assert n("Melt the butter in a large non-stick frying pan over a medium heat.") == "Melt the butter in a large non-stick frying pan"
+    assert n("When the potatoes are cool enough to handle, peel them and cut into chunks.") == "Peel them and cut into chunks"
+    assert n("Beat the eggs in one at a time, waiting for each to be absorbed.") == "Beat the eggs in one at a time"
+
+
+def test_more_step_name_endings():
+    from rhylthyme_importers.base import BaseImporter
+
+    n = BaseImporter.make_step_name
+    assert n("Pour 3.5 litres of cold water into a large saucepan, rinse the wings.") == "Pour 3.5 litres of cold water into a large saucepan"
+    assert n("Begin by frying the chopped bacon and onion in a pan.") == "Begin by frying the chopped bacon and onion in a pan"
+    assert n("Drizzle a lug of oil into a large non-stick frying pan over a medium heat.") == "Drizzle a lug of oil"
+    assert n("Halve the dough and roll out each portion to about 3mm thick.") == "Halve the dough and roll out each portion"
+    assert n("Spread the cottage cheese on the toasted ciabatta halves.") == "Spread the cottage cheese on the toasted ciabatta"
+    assert n("Peel and chop potatoes into rough 2 cm chunks.") == "Peel and chop potatoes into rough 2 cm chunks"
+    assert n("Preheat the oven to 180ºC/350ºF/gas 4.") == "Preheat the oven to 180ºC/350ºF/gas 4"
+    assert n("Let the dough rest at room temperature for 30–60 minutes.") == "Let the dough rest at room temperature"
+    assert n("Add prawns and stir fry to heat through if using.") == "Add prawns and stir fry to heat through"
+
+
+def test_notes_and_section_headers_are_not_steps():
+    from rhylthyme_importers.cooklang import CooklangImporter
+
+    text = "== Filling ==\n\n> This recipe is my grandma's.\n\nGrind the @walnuts{200%g}.\n\nYes\n"
+    program = CooklangImporter().import_from_content(text, source_name="Roll").program
+    assert [s["name"] for t in program["tracks"] for s in t["steps"]] == ["Grind the walnuts", "Yes"]

@@ -65,15 +65,17 @@ class BaseImporter(ABC):
         # step's duration field already surfaces them in the UI, and keeping them
         # here often forces an ugly mid-number truncation at 45 chars.
         cleaned = re.sub(
-            r'\s+for\s+\d+(?:\s*(?:to|-|further|more|additional|extra|other)\s*\d*)?\s*'
+            r'\s+for\s+\d+(?:\s*(?:to|-|\u2013|\u2014|further|more|additional|extra|other)\s*\d*)?\s*'
             r'(?:minute|min|hour|hr|second|sec)s?\b',
             '', cleaned, flags=re.IGNORECASE,
         )
 
         # Skip leading prepositional/adverbial phrases like
         # "In a 2-quart saucepan, heat the oil" → "Heat the oil"
+        # ...and leading conditions: "When the potatoes are cool, peel them"
+        # → "Peel them". The condition is in the description.
         prep_match = re.match(
-            r'^(?:in|on|over|with|using|from|into|at|after)\b[^,;.]*[,;]\s*',
+            r'^(?:in|on|over|with|using|from|into|at|after|when|once|if|before|while|as soon as)\b[^,;.]*[,;]\s*',
             cleaned, flags=re.IGNORECASE,
         )
         if prep_match:
@@ -85,21 +87,51 @@ class BaseImporter(ABC):
         # A subordinate clause ("so it's around 450°C", "because from now on
         # you wanna work fast", "by standing up some logs") explains the
         # step; the name is the step.
+        # (A period inside a number, "3.5 litres", is not a sentence end.)
         m = re.match(
-            r'([A-Za-z][^;.()]*?)'
-            r'(?:\s+(?:until|for about|then|while|making sure|stirring|so that|so|because|which|by)\b|[;.()])',
+            r'([A-Za-z](?:[^;.()]|\.(?=\d))*?)'
+            r'(?:\s+(?:until|for about|then|while|making sure|stirring|so that|so|because|which|by|if|unless)\b|[;()]|\.(?!\d))',
             cleaned,
         )
         name = m.group(1).strip() if m else cleaned
+        # "Begin by frying the bacon" is not "Begin": only cut at "by" when
+        # a real name is left.
+        if m and re.search(r'\s+by\b', cleaned[:m.end()]) and len(name.split()) < 3:
+            m2 = re.match(r'([A-Za-z](?:[^;.()]|\.(?=\d))*?)(?:\s+(?:until|then|while|so that|because|which)\b|[;()]|\.(?!\d))', cleaned)
+            name = m2.group(1).strip() if m2 else cleaned
 
-        # Cap at 45 chars on a word boundary, and never end on a word that
-        # needs what came after it ("remove the pizza dough from the" ->
+        # Cap the length. A whole clause is allowed to run a little long
+        # (up to 52) rather than lose its last word ("...non-stick frying
+        # pan"); otherwise cut at the last comma or "and" if that leaves a
+        # real name, else at a word boundary. Never end on a word that needs
+        # what came after it ("remove the pizza dough from the" ->
         # "remove the pizza dough").
-        if len(name) > 45:
-            truncated = name[:45].rsplit(' ', 1)[0]
-            name = truncated if len(truncated) > 10 else name[:45]
+        if len(name) > 52:
+            head = name[:52]
+            clause = max(head.rfind(','), head.rfind(' and '), head.rfind(' or '))
+            if clause >= 18:
+                name = head[:clause]
+            else:
+                truncated = head.rsplit(' ', 1)[0]
+                # A cut that lands on a modifier ("into a large non-stick
+                # frying", "to about") was mid-phrase: drop the whole trailing
+                # prepositional phrase. A cut on a noun ("on the toasted
+                # ciabatta") reads fine and stays.
+                last = truncated.rsplit(' ', 1)[-1].lower()
+                dangling = (last.endswith(('ing', 'ly')) or last in {
+                    'a', 'an', 'the', 'about', 'rough', 'large', 'small', 'medium', 'big',
+                    'little', 'hot', 'cold', 'warm', 'fresh', 'thin', 'thick', 'non-stick',
+                    'each', 'every', 'some', 'few', 'several', 'more', 'less', 'very',
+                })
+                phrase = re.match(r'^(.{15,}\S)\s+(?:into|onto|in|on|to|with|over|for|from|at|of)\s+[^,]*$', truncated)
+                if dangling and phrase:
+                    truncated = phrase.group(1)
+                name = truncated if len(truncated) > 10 else head
+        name = re.sub(r',\s*\w+ing$', '', name)  # ", waiting" / ", stirring"
+        # "into rough 2" (cm chunks) loses the number; "gas 4" keeps it.
+        name = re.sub(r'\s+(?:rough|roughly|about|around|approximately|to|into|of)\s+\d+(?:\.\d+)?$', '', name)
         name = re.sub(
-            r'(?:\s+(?:the|a|an|and|or|of|to|in|on|at|from|with|into|onto|over|for|your|some|that|this|it|its|is|are|as|but|not))+$',
+            r'(?:\s+(?:the|a|an|and|or|of|to|in|on|at|from|with|into|onto|over|for|your|some|that|this|it|its|is|are|as|but|not|if|unless|whether|where))+$',
             '', name.strip(), flags=re.IGNORECASE,
         ).rstrip(',:-')
 
