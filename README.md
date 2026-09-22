@@ -36,7 +36,10 @@ for how tracks and cross-track triggers are added afterwards.
 | [`slidedeck`](#slide-decks) | PowerPoint `.pptx` | file | nothing |
 
 `rhylthyme-import list` prints the registered importers;
-`rhylthyme-import import <url>` picks one by URL.
+`rhylthyme-import import <url>` picks one by URL. With the `rhylthyme`
+command installed (`pip install rhylthyme`), the same importers are
+`rhylthyme import <url>` and `rhylthyme search <query>`, with validation
+and `--publish` on the end.
 
 ### TheMealDB
 
