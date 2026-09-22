@@ -5,8 +5,15 @@ Import plugins for converting external data sources into Rhylthyme programs.
 ## Installation
 
 ```bash
-pip install -e ./rhylthyme-importers
+pip install rhylthyme-importers              # TheMealDB, Spoonacular, protocols.io, Opentrons, Benchling, recipe sites
+pip install "rhylthyme-importers[cooklang]"   # + CookLang .cook files
 ```
+
+Python 3.12 or newer. From a checkout: `pip install -e ./rhylthyme-importers`.
+
+Importers read a URL, an id, or text you pass them. `import_from_url()`
+refuses a local path unless the importer was built with
+`allow_local_files=True`; the command-line tools do that, a server should not.
 
 ## Available Importers
 
@@ -221,26 +228,19 @@ ImporterRegistry.register(MyCustomImporter())
 
 ## Publishing to PyPI
 
-To publish this package to PyPI:
+Bump `version` in `pyproject.toml`, then build from a clean export so stray
+local files do not ship, check, and upload (the token lives in `~/.pypirc`):
 
 ```bash
-# Install build tools
-pip install build twine
-
-# Build the package
-cd rhylthyme-importers
-python -m build
-
-# Upload to TestPyPI first (optional)
-python -m twine upload --repository testpypi dist/*
-
-# Upload to PyPI
-python -m twine upload dist/*
+git archive HEAD | tar -x -C /tmp/rhylthyme-importers-release
+python -m build /tmp/rhylthyme-importers-release
+python -m twine check /tmp/rhylthyme-importers-release/dist/*
+python -m twine upload /tmp/rhylthyme-importers-release/dist/*
+git tag v<version> && git push origin v<version>
 ```
 
-You'll need PyPI credentials configured in `~/.pypirc` or use environment variables:
-- `TWINE_USERNAME` / `TWINE_PASSWORD` or
-- `TWINE_API_TOKEN` (recommended)
+rhylthyme-server installs this package from PyPI on Vercel, so a fix here
+reaches production only after a release and a server redeploy.
 
 ## License
 

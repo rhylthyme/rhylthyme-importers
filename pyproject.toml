@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rhylthyme-importers"
-version = "0.3.0"
+version = "0.4.0"
 description = "Import plugins for converting external data sources to Rhylthyme programs"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -32,6 +32,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
 cooklang = ["cooklang-py>=0.3.2"]
+# The catalogue-maintenance commands (rhylthyme-backfill-*, rhylthyme-clean-titles,
+# rhylthyme-detect-text-thumbs, rhylthyme-embed-recipes, rhylthyme-replace-broken-thumbs)
+# talk to a Rhylthyme Supabase project and to model APIs. Their imports are lazy,
+# so the importers themselves need none of this.
+catalog = ["anthropic>=0.18.0", "langdetect>=1.0.9", "fal-client>=0.4.0", "Pillow>=10.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/rhylthyme/rhylthyme-importers"
