@@ -128,6 +128,7 @@ class OpentronsImporter(BaseImporter):
             events,
             name=name,
             description='',
+            program_id=self.generate_program_id(name) if name != 'Imported Opentrons protocol' else 'opentrons-imported',
             model_by_mount=model_by_mount,
             channels_by_mount=channels_by_mount,
         )

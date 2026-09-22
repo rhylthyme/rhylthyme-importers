@@ -43,8 +43,10 @@ class BaseImporter(ABC):
         pass
 
     def generate_program_id(self, name: str) -> str:
-        """Generate a safe program ID from a name."""
-        return re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower())[:50]
+        """A kebab-case program id from a name: "Viral RNA Isolation (Magnetic
+        Beads)" -> "viral-rna-isolation-magnetic-beads"."""
+        slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')[:50].rstrip('-')
+        return slug or 'imported-program'
 
     @staticmethod
     def make_step_name(text: str) -> str:

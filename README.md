@@ -24,7 +24,7 @@ rhylthyme import https://www.bbcgoodfood.com/recipes/classic-lasagne
 #   Importing with recipe-scrapers…
 #   Saved easy_classic_lasagne.json
 
-rhylthyme-render easy_classic_lasagne.json -o lasagne.png --style web --palette vivid --color-by task   # needs Node.js
+rhylthyme render easy_classic_lasagne.json -o lasagne.png --style web --palette vivid --color-by task    # needs Node.js
 rhylthyme publish easy_classic_lasagne.json --open                                                    # live timeline with timers
 ```
 
@@ -67,21 +67,20 @@ for how tracks and cross-track triggers are added afterwards.
 | [`benchling`](#benchling) | Benchling protocols, workflow tasks, notebook entries | protocol URL or id | a Benchling API token |
 | [`slidedeck`](#slide-decks) | PowerPoint `.pptx` | file | nothing |
 
-`rhylthyme-import list` prints the registered importers;
-`rhylthyme-import import <url>` picks one by URL. With the `rhylthyme`
-command installed (`pip install rhylthyme`), the same importers are
-`rhylthyme import <url>` and `rhylthyme search <query>`, with validation
-and `--publish` on the end.
+`rhylthyme importers` prints the registered importers; `rhylthyme import <url>`
+picks one by URL, validates the program, writes `<programId>.json` and with
+`--publish` prints a live-timeline URL; `rhylthyme search <query> -i <importer>`
+finds things to import. (`pip install rhylthyme` gives you that command with
+this package.)
 
 ### TheMealDB
 
 Recipes from [TheMealDB](https://www.themealdb.com/). No key needed.
 
 ```bash
-rhylthyme-import search "chicken curry" -i themealdb
-rhylthyme-import import "https://www.themealdb.com/meal/52772" -o curry.json --pretty
-rhylthyme-import mealdb random -o random_meal.json --pretty
-rhylthyme-import mealdb categories
+rhylthyme search "chicken curry" -i themealdb
+rhylthyme import https://www.themealdb.com/meal/52772 -o curry.json
+rhylthyme import 52772 -i themealdb --publish
 ```
 
 ```python
@@ -98,8 +97,8 @@ with a message saying so.
 
 ```bash
 export SPOONACULAR_API_KEY=...
-rhylthyme-import search "pad thai" -i spoonacular
-rhylthyme-import import "https://spoonacular.com/recipes/pad-thai-716429" -o pad_thai.json --pretty
+rhylthyme search "pad thai" -i spoonacular
+rhylthyme import https://spoonacular.com/recipes/pad-thai-716429 -o pad_thai.json
 ```
 
 ```python
@@ -115,7 +114,7 @@ Any of the several hundred recipe websites that
 URL; the importer is chosen automatically when the host is supported.
 
 ```bash
-rhylthyme-import import "https://www.seriouseats.com/the-best-chili-recipe" -o chili.json --pretty
+rhylthyme import https://www.seriouseats.com/the-best-chili-recipe -o chili.json
 ```
 
 `rhylthyme-sweep-supported-sites` checks which of those sites still parse
@@ -128,8 +127,8 @@ a GitHub blob URL (converted to raw automatically) or a local file. Needs the
 `cooklang` extra: `pip install "rhylthyme-importers[cooklang]"`.
 
 ```bash
-rhylthyme-import import "https://github.com/cooklang/cookcli/blob/main/seed/Neapolitan%20Pizza.cook" \
-    -o pizza.json --pretty
+rhylthyme import "https://github.com/cooklang/cookcli/blob/main/seed/Neapolitan%20Pizza.cook" -o pizza.json
+rhylthyme import "Neapolitan Pizza.cook" -i cooklang
 ```
 
 ```python
@@ -171,8 +170,8 @@ which words a step came from.
 
 ```bash
 export PROTOCOLS_IO_TOKEN=...
-rhylthyme-import search "western blot" -i protocolsio
-rhylthyme-import import "https://www.protocols.io/view/western-blot-..." -o blot.json --pretty
+rhylthyme search "western blot" -i protocolsio
+rhylthyme import "https://www.protocols.io/view/western-blot-..." -o blot.json
 ```
 
 ```python
@@ -188,9 +187,9 @@ table. Nothing to configure. Full feature matrix in
 [`docs/opentrons.md`](docs/opentrons.md).
 
 ```bash
-rhylthyme-import-opentrons path/to/protocol.py                 # program JSON on stdout
-rhylthyme-import-opentrons path/to/protocol.py -o program.json
-cat protocol.py | rhylthyme-import-opentrons -                 # from stdin
+rhylthyme import https://raw.githubusercontent.com/Opentrons/Protocols/develop/protocols/007992/rna_isolation.ot2.apiv2.py
+rhylthyme import path/to/protocol.py -o program.json
+cat protocol.py | rhylthyme import - -i opentrons --stdout     # pasted source
 ```
 
 ```python
@@ -222,11 +221,11 @@ importer.search_live(tenant="acme", token="...", query="PCR")
 importer.import_from_url("https://acme.benchling.com/acme/protocols/prt_abc123", token="...")
 ```
 
-The command line works offline on a saved API response, which is how the
+Offline, a saved Benchling API response converts too, which is how the
 importer is tested:
 
-```bash
-rhylthyme-import-benchling --from-file protocol_response.json --tenant acme -o program.json
+```python
+BenchlingImporter().import_from_file("protocol_response.json", tenant="acme")
 ```
 
 ### Slide decks
