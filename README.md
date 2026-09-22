@@ -15,6 +15,38 @@ Importers read a URL, an id, or text you pass them. `import_from_url()`
 refuses a local path unless the importer was built with
 `allow_local_files=True`; the command-line tools do that, a server should not.
 
+## Quickstart: a recipe page to a picture and a live timeline
+
+```bash
+pip install rhylthyme            # this package plus the rhylthyme command and the renderer
+
+rhylthyme import https://www.bbcgoodfood.com/recipes/classic-lasagne
+#   Importing with recipe-scrapers…
+#   Saved easy_classic_lasagne.json
+
+rhylthyme-render easy_classic_lasagne.json -o lasagne.png --style web --palette vivid --color-by task   # needs Node.js
+rhylthyme publish easy_classic_lasagne.json --open                                                    # live timeline with timers
+```
+
+The same from Python:
+
+```python
+from rhylthyme_importers import ImporterRegistry
+from rhylthyme_timeline import render
+
+url = "https://www.bbcgoodfood.com/recipes/classic-lasagne"
+result = ImporterRegistry.find_for_url(url).import_from_url(url)
+assert result.success, result.error
+program = result.program                       # Rhylthyme program JSON
+
+svg = render(program, style="web", colorBy="task")
+open("lasagne.svg", "w").write(svg)
+```
+
+Run `rhylthyme validate` (or the `validate_program` MCP tool) on anything an
+importer produces before you rely on the timings: an importer reads what the
+source says, and sources are vague about time.
+
 ## What is here
 
 Each importer turns one kind of source into a Rhylthyme program: parallel
