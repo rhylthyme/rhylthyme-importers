@@ -25,6 +25,7 @@ rhylthyme import https://www.bbcgoodfood.com/recipes/classic-lasagne
 
 rhylthyme render easy_classic_lasagne.json -o lasagne.png --style web --palette vivid --color-by task    # needs Node.js
 rhylthyme publish easy_classic_lasagne.json --open                                                    # live timeline with timers
+rhylthyme import https://www.bbcgoodfood.com/recipes/classic-lasagne --review    # a model checks the import against the page (needs rhylthyme login)
 ```
 
 The same from Python:
@@ -44,7 +45,10 @@ open("lasagne.svg", "w").write(svg)
 
 Run `rhylthyme validate` (or the `validate_program` MCP tool) on anything an
 importer produces before you rely on the timings: an importer reads what the
-source says, and sources are vague about time.
+source says, and sources are vague about time. `--review` goes further: a
+model reads the program against the source and reports the durations that
+are defaults rather than facts, steps the parser dropped, and steps chained
+that could overlap. It changes nothing; the findings are yours to apply.
 
 ## What is here
 
