@@ -73,6 +73,14 @@ def test_alternative_label():
     assert _alternative_label("Notes:") is None
 
 
+def test_note_with_inline_colon_is_not_a_component():
+    from rhylthyme_importers.restructure import _header_label
+    assert _header_label("Note: for flatter Snickerdoodle cookies") == ""
+    assert _header_label("For the lemon vinaigrette") == "Lemon vinaigrette"
+    assert _header_label("2.:") == ""
+    assert _header_label("How to make the creamy Tuscan salmon:") == "Creamy Tuscan salmon"
+
+
 def test_not_bulk_shape_is_unchanged():
     program = _bulk(["Mix."])
     program["tracks"].append({"trackId": "x", "name": "Extra", "steps": []})

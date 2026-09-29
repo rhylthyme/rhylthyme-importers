@@ -397,16 +397,23 @@ def _header_label(text: str) -> Optional[str]:
     Returns "" for a header that isn't a component ("For a gas grill:", "Notes:"),
     None for a step that isn't a header.
     """
+    if re.match(r"^\s*(?:step\s*)?\d+\s*[.):]*\s*$", text or "", re.IGNORECASE):
+        return ""   # a bare "2." left over from numbered instructions
     m = _HEADER_RE.match(text or "")
     if not m:
         short = (text or "").strip()
         # "For the lemon vinaigrette", "Tips & Notes": a heading without the colon.
-        if short and len(short.split()) <= 5 and not re.search(r"[.!?]$", short) and \
+        if re.match(r"(?i)(notes?|tips?)\s*:", short):
+            return ""   # "Note: for flatter cookies" is an aside, not a component
+        if short and ":" not in short and len(short.split()) <= 5 and not re.search(r"[.!?]$", short) and \
                 (re.match(r"(?i)(for (the |a |an )?\w|tips?\b|notes?\b)", short)) and \
                 not _is_verb(short.split()[0], False):
             return _header_label(short + ":")
         return None
     label = m.group("label").strip()
+    label = re.sub(r"(?i)^how to make (?:the |a |an |your )?", "", label).strip()
+    if not re.search(r"[^\W\d_]{3,}", label) or len(label) > 40:
+        return ""   # "2.", or a sentence rather than a heading
     if re.match(r"(?i)(for an?\s|if\s|or\s|option|alternative|using\s|on the stove|in the oven|"
                 r"notes?|tips?|variations?|adjusting|serving|storage|to serve|nutrition|"
                 r"remarques?|conseils?|note|consigli|notas?|hinweise?)\b", label):
@@ -921,7 +928,7 @@ def restructure(program: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]
     used_names = {"Cooking", "Oven", "Water"}
     for i, chain in enumerate(chains[1:], start=1):
         if chain["steps"]:
-            name = label(chain, _short_name(chain.get("text", ""), 40))
+            name = label(chain, _step_name(chain.get("text", ""), max_words=4))
             base, n = name, 2
             while name in used_names:
                 name, n = f"{base} ({n})", n + 1
