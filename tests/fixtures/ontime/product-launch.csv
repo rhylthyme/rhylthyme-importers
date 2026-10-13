@@ -1,0 +1,11 @@
+cue,title,time start,time end,duration,link start,timer type,note,presenter
+,Doors,,,,,group,,
+1,Doors open,18:00:00,18:30:00,00:30:00,,,House music; bar open,
+,,,,,,group-end,,
+,Keynote,,,,,group,,
+2,Welcome,18:30:00,18:35:00,00:05:00,,,Walk-in music fades,Host
+3,Product demo,18:35:00,19:05:00,00:30:00,x,,Two clickers on stage,CEO
+,Mics live in the house,,,,,milestone,,
+4,Audience Q&A,19:05:00,19:20:00,00:15:00,x,,Two roaming mics,Host
+,,,,,,group-end,,
+5,Reception,19:30:00,21:00:00,01:30:00,,,Canapés in the foyer,

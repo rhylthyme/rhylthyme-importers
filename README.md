@@ -5,7 +5,7 @@ Import plugins for converting external data sources into Rhylthyme programs.
 ## Installation
 
 ```bash
-pip install rhylthyme-importers      # TheMealDB, Spoonacular, recipe sites, CookLang, protocols.io, Opentrons, Benchling
+pip install rhylthyme-importers      # TheMealDB, Spoonacular, recipe sites, CookLang, protocols.io, Opentrons, Benchling, Ontime
 ```
 
 Python 3.12 or newer. From a checkout: `pip install -e ./rhylthyme-importers`.
@@ -69,6 +69,7 @@ for how tracks and cross-track triggers are added afterwards.
 | [`opentrons`](#opentrons) | Opentrons Protocol API v2 `.py` | file or pasted source | nothing |
 | [`benchling`](#benchling) | Benchling protocols, workflow tasks, notebook entries | protocol URL or id | a Benchling API token |
 | [`slidedeck`](#slide-decks) | PowerPoint `.pptx` | file | nothing |
+| [`ontime`](#ontime) | [Ontime](https://www.getontime.no) run of show | project `.json`, `.xlsx`, CSV/TSV or a pasted table | nothing |
 
 `rhylthyme importers` prints the registered importers; `rhylthyme import <url>`
 picks one by URL, validates the program, writes `<programId>.json` and with
@@ -239,6 +240,44 @@ timed from speaker-notes cues where present.
 from rhylthyme_importers import SlideDeckImporter
 SlideDeckImporter().import_from_url("talk.pptx")
 ```
+
+### Ontime
+
+An [Ontime](https://www.getontime.no) rundown becomes a run of show: each
+group a track, each event a step at its clock time, linked events chained
+with `afterStep`, gaps and overlaps kept. Milestones become alerts on the
+next step. Cues, notes, end actions, timer types, colours and custom fields
+are kept in each step's `metadata.ontime`. It reads:
+
+- the project file Ontime saves (`.json`, version 4 or 3);
+- the rundown as a table: Ontime's `.xlsx` export or import template, a
+  Google Sheet (its share link, from the web app or MCP), or the same table
+  as CSV, TSV or Markdown, with Ontime's column names (`time start`,
+  `time end`, `duration`, `cue`, `title`, `note`, `link start`, `skip`,
+  `timer type`).
+
+```
+cue,title,time start,time end,duration,link start,timer type,note,presenter
+,Keynote,,,,,group,,
+2,Welcome,18:30:00,18:35:00,00:05:00,,,Walk-in music fades,Host
+3,Product demo,18:35:00,19:05:00,00:30:00,x,,Two clickers on stage,CEO
+,Mics live in the house,,,,,milestone,,
+4,Audience Q&A,19:05:00,19:20:00,00:15:00,x,,Two roaming mics,Host
+```
+
+```bash
+rhylthyme import show.xlsx -i ontime
+```
+
+```python
+from rhylthyme_importers import OntimeImporter
+OntimeImporter(allow_local_files=True).import_from_url("show.json")
+OntimeImporter().import_from_source(csv_text, title="Product launch")
+```
+
+A project with several rundowns imports the first one that has events in
+it; pass `rundown=` (an id or a title) to pick another. A full example is
+`tests/fixtures/ontime/product-launch.csv`.
 
 ## Other commands
 
