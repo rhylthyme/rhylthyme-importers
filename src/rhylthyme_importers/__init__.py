@@ -7,6 +7,7 @@ Available importers:
 - SpoonacularImporter: Import recipes from the Spoonacular API
 - SlideDeckImporter: Import PowerPoint slide decks as presentation timelines
 - CooklangImporter: Import CookLang .cook recipe files (requires cooklang-py)
+- OntimeImporter: Import Ontime rundowns (project .json, .xlsx, CSV) as runs of show
 """
 
 from .base import BaseImporter, ImporterRegistry
@@ -17,6 +18,7 @@ from .slidedeck import SlideDeckImporter
 from .cooklang import CooklangImporter
 from .recipe_scrapers_importer import RecipeScrapersImporter
 from .opentrons import OpentronsImporter
+from .ontime import OntimeImporter
 
 __all__ = [
     "BaseImporter",
@@ -28,4 +30,5 @@ __all__ = [
     "CooklangImporter",
     "RecipeScrapersImporter",
     "OpentronsImporter",
+    "OntimeImporter",
 ]
