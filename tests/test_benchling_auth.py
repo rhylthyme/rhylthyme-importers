@@ -52,3 +52,10 @@ def test_a_whole_bearer_value_is_not_doubled(sent):
 
 def test_callers_can_tell_the_client_takes_a_header_value():
     assert client.ACCEPTS_AUTHORIZATION_HEADER is True
+
+
+@pytest.mark.parametrize("tenant", ["10.0.0.5:8443/x?", "acme.evil.com", "acme\n", "", "-x"])
+def test_only_a_bare_subdomain_goes_into_the_url(sent, tenant):
+    with pytest.raises(client.BenchlingError):
+        client.fetch_protocol(tenant=tenant, token="t", protocol_id="prt_1")
+    assert sent == []

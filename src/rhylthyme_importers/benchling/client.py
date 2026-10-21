@@ -43,6 +43,16 @@ def basic_auth(api_key: str) -> str:
     return "Basic " + base64.b64encode(f"{api_key}:".encode("utf-8")).decode("ascii")
 
 
+_TENANT_RE = __import__("re").compile(r"[a-z0-9][a-z0-9-]{0,98}[a-z0-9]", __import__("re").IGNORECASE)
+
+
+def _check_tenant(tenant: str) -> str:
+    """Refuse anything but a bare subdomain: it goes into the request URL."""
+    if not isinstance(tenant, str) or not _TENANT_RE.fullmatch(tenant):
+        raise BenchlingError(f"Not a Benchling tenant subdomain: {tenant!r}")
+    return tenant
+
+
 def _authorization(token: str) -> str:
     if token.startswith(("Basic ", "Bearer ")):
         return token
@@ -132,19 +142,19 @@ def _request_json(
 
 def fetch_protocol(*, tenant: str, token: str, protocol_id: str) -> Dict[str, Any]:
     """``GET /api/v2/protocols/{id}`` on the user's tenant."""
-    base = f"https://{tenant}.benchling.com/api/v2/protocols/{urllib.parse.quote(protocol_id, safe='')}"
+    base = f"https://{_check_tenant(tenant)}.benchling.com/api/v2/protocols/{urllib.parse.quote(protocol_id, safe='')}"
     return _request_json("GET", base, token=token)
 
 
 def fetch_workflow_task(*, tenant: str, token: str, task_id: str) -> Dict[str, Any]:
     """``GET /api/v2/workflow-tasks/{id}``."""
-    base = f"https://{tenant}.benchling.com/api/v2/workflow-tasks/{urllib.parse.quote(task_id, safe='')}"
+    base = f"https://{_check_tenant(tenant)}.benchling.com/api/v2/workflow-tasks/{urllib.parse.quote(task_id, safe='')}"
     return _request_json("GET", base, token=token)
 
 
 def fetch_entry(*, tenant: str, token: str, entry_id: str) -> Dict[str, Any]:
     """``GET /api/v2/entries/{id}`` (Notebook Entry)."""
-    base = f"https://{tenant}.benchling.com/api/v2/entries/{urllib.parse.quote(entry_id, safe='')}"
+    base = f"https://{_check_tenant(tenant)}.benchling.com/api/v2/entries/{urllib.parse.quote(entry_id, safe='')}"
     return _request_json("GET", base, token=token)
 
 
@@ -203,7 +213,7 @@ def search_protocols(
     if query:
         params["nameIncludes"] = query
     qs = urllib.parse.urlencode(params)
-    url = f"https://{tenant}.benchling.com/api/v2/protocols?{qs}"
+    url = f"https://{_check_tenant(tenant)}.benchling.com/api/v2/protocols?{qs}"
     data = _request_json("GET", url, token=token)
     rows = data.get("protocols") or data.get("results") or []
     return [r for r in rows if isinstance(r, dict)]
@@ -213,7 +223,7 @@ def validate_token(*, tenant: str, token: str) -> Optional[Dict[str, Any]]:
     """``GET /api/v2/users/me`` — returns the parsed body on 200, or
     None on any auth/transport failure. Used by the Flask connect
     endpoint to refuse storing a bad token."""
-    url = f"https://{tenant}.benchling.com/api/v2/users/me"
+    url = f"https://{_check_tenant(tenant)}.benchling.com/api/v2/users/me"
     try:
         return _request_json("GET", url, token=token)
     except BenchlingError:
