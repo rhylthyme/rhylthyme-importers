@@ -31,7 +31,27 @@ Rhylthyme program is identical regardless of which path you came in by.
 
 ## Quickstart (live mode)
 
-### 1. Generate a Benchling API token
+There are two ways to connect: **Sign in with Benchling** (OAuth), when
+your tenant has installed the Rhylthyme app, or a **personal API token**.
+
+### Sign in with Benchling
+
+Sign in to lab.rhylthyme.com, open **Edit profile**, scroll to
+**Benchling (optional)**, type your tenant subdomain and click **Sign in
+with Benchling**. Benchling asks you to approve, then sends you back
+connected. Rhylthyme acts as you: it can read only what you can read, and
+Benchling's audit log shows the Rhylthyme app next to your name.
+
+- Your Benchling admin has to install the Rhylthyme app on the tenant
+  first. GxP tenants can't use it (Benchling offers delegated sign-in only
+  to apps in its current app format), so use an API token there.
+- The sign-in renews itself while you use it; after 30 days without an
+  import, sign in again.
+- Disconnect deletes Rhylthyme's copy. Benchling has no way for an app to
+  revoke a sign-in; it stops working within 30 days, or at once if your
+  admin uninstalls the app.
+
+### Or: 1. Generate a Benchling API token
 
 In Benchling: **Settings → Account → Workspace API tokens → Create
 token**. Copy the token immediately; Benchling won't show it again.
@@ -45,7 +65,9 @@ scroll to **Benchling (optional)**, and paste:
 - **Personal API token** — what you just generated
 
 Rhylthyme validates the token against `GET /api/v2/users/me` on your
-tenant before storing anything. On success you'll see
+tenant before storing anything. API keys are sent the way Benchling
+documents them, as HTTP Basic (the key as user name, empty password);
+OAuth access tokens are sent as `Bearer`. On success you'll see
 *"Connected as Your Name @ acme.benchling.com"* with a Disconnect
 button.
 
@@ -129,7 +151,9 @@ The short version:
 
 - **Tokens are AES-GCM encrypted at rest.** The encryption key
   (`BENCHLING_KEY_ENCRYPTION_KEY`) is a 32-byte server env var; the
-  plaintext token only exists in memory during a single request.
+  plaintext token only exists in memory during a single request. For
+  Sign in with Benchling that covers both the access token (15 minutes)
+  and the single-use refresh token (30 days).
 - **No INSERT policy** on `user_benchling` for the public roles — the
   table is server-write-only via the service role. Users can SELECT /
   UPDATE / DELETE only their own row via RLS.
@@ -143,6 +167,14 @@ The short version:
 ---
 
 ## Operational notes
+
+### The client's `token` argument
+
+`token` is either a bare OAuth access token (sent as `Bearer <token>`) or a
+whole Authorization value starting with `Basic ` or `Bearer `. For an API
+key pass `client.basic_auth(key)`. `client.ACCEPTS_AUTHORIZATION_HEADER`
+is `True` from this version on, so a caller can tell whether the installed
+importer takes a whole value; older versions always sent `Bearer <token>`.
 
 Token storage, the encryption key and the import cache belong to the
 rhylthyme-server deployment and are documented there, not in this package.

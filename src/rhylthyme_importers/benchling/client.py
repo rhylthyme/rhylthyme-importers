@@ -5,9 +5,13 @@ Task / Notebook Entry resources, plus a name-keyword search across
 Protocols. Phase 1's offline helper (``load_protocol_from_file``)
 stays around for tests and the CLI's ``--from-file`` mode.
 
-Auth: the caller supplies the API token (decrypted upstream by the
+Auth: the caller supplies the credential (decrypted upstream by the
 Flask endpoint that owns the ``user_benchling`` row). Tokens are
-NEVER persisted or logged from inside this module.
+NEVER persisted or logged from inside this module. ``token`` is either
+a bare token, sent as ``Bearer <token>`` (an OAuth access token from
+Sign in with Benchling), or a whole Authorization value starting with
+``Basic `` or ``Bearer `` (a personal API key goes as HTTP Basic:
+``Basic base64(key + ":")``). ``basic_auth`` builds the latter.
 
 Errors: every HTTP failure surfaces as ``BenchlingError`` with a
 human-friendly message; the raw response body is included only for
@@ -26,6 +30,23 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 _TIMEOUT_SECONDS = 12
+
+# Callers check this before passing a whole Authorization value as token.
+ACCEPTS_AUTHORIZATION_HEADER = True
+
+
+def basic_auth(api_key: str) -> str:
+    """The Authorization value for a personal API key: Benchling takes the
+    key as the user name of HTTP Basic, with an empty password."""
+    import base64
+
+    return "Basic " + base64.b64encode(f"{api_key}:".encode("utf-8")).decode("ascii")
+
+
+def _authorization(token: str) -> str:
+    if token.startswith(("Basic ", "Bearer ")):
+        return token
+    return f"Bearer {token}"
 
 
 class BenchlingError(Exception):
@@ -70,7 +91,7 @@ def _request_json(
     token in the Authorization header only — never logged.
     """
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": _authorization(token),
         "Accept": "application/json",
     }
     data: Optional[bytes] = None
