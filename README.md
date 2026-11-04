@@ -383,6 +383,20 @@ class MyCustomImporter(BaseImporter):
 ImporterRegistry.register(MyCustomImporter())
 ```
 
+## Releasing
+
+From a clean, up-to-date `main`, with a PyPI token in `~/.pypirc`:
+
+```bash
+make release                 # next patch version
+make release VERSION=0.5.0   # a specific version
+DRY_RUN=1 make release       # tests, build and package check only
+```
+
+This runs the tests, builds and checks the package, and asks once before
+publishing. It then commits the version, pushes the `vX.Y.Z` tag, uploads to
+PyPI and opens the `rhylthyme-server` PR that requires the new version.
+
 ## License
 
 Apache License 2.0
