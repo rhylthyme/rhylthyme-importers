@@ -217,6 +217,11 @@ searches your library and imports by id or URL. Details, field mapping and
 the roadmap: [`docs/benchling.md`](docs/benchling.md),
 [`docs/benchling-field-mapping.md`](docs/benchling-field-mapping.md).
 
+Benchling limits API access to enterprise tenants, and we don't currently have
+one to test with. If you have an enterprise account, please get in touch:
+[support@rhylthyme.com](mailto:support@rhylthyme.com?subject=Benchling%20enterprise%20account).
+See [where this stands](docs/benchling.md#where-this-stands).
+
 ```python
 from rhylthyme_importers.benchling import BenchlingImporter
 importer = BenchlingImporter()
