@@ -5,9 +5,13 @@ Task / Notebook Entry resources, plus a name-keyword search across
 Protocols. Phase 1's offline helper (``load_protocol_from_file``)
 stays around for tests and the CLI's ``--from-file`` mode.
 
-Auth: the caller supplies the API token (decrypted upstream by the
+Auth: the caller supplies the credential (decrypted upstream by the
 Flask endpoint that owns the ``user_benchling`` row). Tokens are
-NEVER persisted or logged from inside this module.
+NEVER persisted or logged from inside this module. ``token`` is either
+a bare token, sent as ``Bearer <token>`` (an OAuth access token from
+Sign in with Benchling), or a whole Authorization value starting with
+``Basic `` or ``Bearer `` (a personal API key goes as HTTP Basic:
+``Basic base64(key + ":")``). ``basic_auth`` builds the latter.
 
 Errors: every HTTP failure surfaces as ``BenchlingError`` with a
 human-friendly message; the raw response body is included only for
@@ -26,6 +30,33 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 _TIMEOUT_SECONDS = 12
+
+# Callers check this before passing a whole Authorization value as token.
+ACCEPTS_AUTHORIZATION_HEADER = True
+
+
+def basic_auth(api_key: str) -> str:
+    """The Authorization value for a personal API key: Benchling takes the
+    key as the user name of HTTP Basic, with an empty password."""
+    import base64
+
+    return "Basic " + base64.b64encode(f"{api_key}:".encode("utf-8")).decode("ascii")
+
+
+_TENANT_RE = __import__("re").compile(r"[a-z0-9][a-z0-9-]{0,98}[a-z0-9]", __import__("re").IGNORECASE)
+
+
+def _check_tenant(tenant: str) -> str:
+    """Refuse anything but a bare subdomain: it goes into the request URL."""
+    if not isinstance(tenant, str) or not _TENANT_RE.fullmatch(tenant):
+        raise BenchlingError(f"Not a Benchling tenant subdomain: {tenant!r}")
+    return tenant
+
+
+def _authorization(token: str) -> str:
+    if token.startswith(("Basic ", "Bearer ")):
+        return token
+    return f"Bearer {token}"
 
 
 class BenchlingError(Exception):
@@ -70,7 +101,7 @@ def _request_json(
     token in the Authorization header only — never logged.
     """
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": _authorization(token),
         "Accept": "application/json",
     }
     data: Optional[bytes] = None
@@ -111,19 +142,19 @@ def _request_json(
 
 def fetch_protocol(*, tenant: str, token: str, protocol_id: str) -> Dict[str, Any]:
     """``GET /api/v2/protocols/{id}`` on the user's tenant."""
-    base = f"https://{tenant}.benchling.com/api/v2/protocols/{urllib.parse.quote(protocol_id, safe='')}"
+    base = f"https://{_check_tenant(tenant)}.benchling.com/api/v2/protocols/{urllib.parse.quote(protocol_id, safe='')}"
     return _request_json("GET", base, token=token)
 
 
 def fetch_workflow_task(*, tenant: str, token: str, task_id: str) -> Dict[str, Any]:
     """``GET /api/v2/workflow-tasks/{id}``."""
-    base = f"https://{tenant}.benchling.com/api/v2/workflow-tasks/{urllib.parse.quote(task_id, safe='')}"
+    base = f"https://{_check_tenant(tenant)}.benchling.com/api/v2/workflow-tasks/{urllib.parse.quote(task_id, safe='')}"
     return _request_json("GET", base, token=token)
 
 
 def fetch_entry(*, tenant: str, token: str, entry_id: str) -> Dict[str, Any]:
     """``GET /api/v2/entries/{id}`` (Notebook Entry)."""
-    base = f"https://{tenant}.benchling.com/api/v2/entries/{urllib.parse.quote(entry_id, safe='')}"
+    base = f"https://{_check_tenant(tenant)}.benchling.com/api/v2/entries/{urllib.parse.quote(entry_id, safe='')}"
     return _request_json("GET", base, token=token)
 
 
@@ -182,7 +213,7 @@ def search_protocols(
     if query:
         params["nameIncludes"] = query
     qs = urllib.parse.urlencode(params)
-    url = f"https://{tenant}.benchling.com/api/v2/protocols?{qs}"
+    url = f"https://{_check_tenant(tenant)}.benchling.com/api/v2/protocols?{qs}"
     data = _request_json("GET", url, token=token)
     rows = data.get("protocols") or data.get("results") or []
     return [r for r in rows if isinstance(r, dict)]
@@ -192,7 +223,7 @@ def validate_token(*, tenant: str, token: str) -> Optional[Dict[str, Any]]:
     """``GET /api/v2/users/me`` — returns the parsed body on 200, or
     None on any auth/transport failure. Used by the Flask connect
     endpoint to refuse storing a bad token."""
-    url = f"https://{tenant}.benchling.com/api/v2/users/me"
+    url = f"https://{_check_tenant(tenant)}.benchling.com/api/v2/users/me"
     try:
         return _request_json("GET", url, token=token)
     except BenchlingError:
