@@ -217,6 +217,11 @@ searches your library and imports by id or URL. Details, field mapping and
 the roadmap: [`docs/benchling.md`](docs/benchling.md),
 [`docs/benchling-field-mapping.md`](docs/benchling-field-mapping.md).
 
+Benchling limits API access to enterprise tenants, and we don't currently have
+one to test with. If you have an enterprise account, please get in touch:
+[support@rhylthyme.com](mailto:support@rhylthyme.com?subject=Benchling%20enterprise%20account).
+See [where this stands](docs/benchling.md#where-this-stands).
+
 ```python
 from rhylthyme_importers.benchling import BenchlingImporter
 importer = BenchlingImporter()
@@ -377,6 +382,20 @@ class MyCustomImporter(BaseImporter):
 # Register the importer
 ImporterRegistry.register(MyCustomImporter())
 ```
+
+## Releasing
+
+From a clean, up-to-date `main`, with a PyPI token in `~/.pypirc`:
+
+```bash
+make release                 # next patch version
+make release VERSION=0.5.0   # a specific version
+DRY_RUN=1 make release       # tests, build and package check only
+```
+
+This runs the tests, builds and checks the package, and asks once before
+publishing. It then commits the version, pushes the `vX.Y.Z` tag, uploads to
+PyPI and opens the `rhylthyme-server` PR that requires the new version.
 
 ## License
 

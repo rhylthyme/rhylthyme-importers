@@ -1,6 +1,6 @@
 PY := python
 
-.PHONY: docs docs-check test
+.PHONY: docs docs-check test release
 
 docs:
 	$(PY) -m rhylthyme_importers.opentrons.docs_gen
@@ -12,3 +12,7 @@ docs-check:
 
 test:
 	pytest tests/
+
+# make release, or make release VERSION=0.5.0. See scripts/release.sh.
+release:
+	./scripts/release.sh $(VERSION)

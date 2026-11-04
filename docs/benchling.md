@@ -14,6 +14,25 @@ timeline at the bench.
 
 ---
 
+## Where this stands
+
+**Have an enterprise Benchling account? We'd like to hear from you:
+[support@rhylthyme.com](mailto:support@rhylthyme.com?subject=Benchling%20enterprise%20account).**
+We don't currently have an enterprise tenant to test with, and working with
+a lab that does is the next step for this integration.
+
+Benchling makes API access and Benchling Apps available to enterprise tenants
+only, so live import needs an enterprise account either way. Offline
+conversion of a saved Benchling response needs no account.
+
+| How you connect | Status |
+| --- | --- |
+| **Offline / CLI** with a saved response | Available. |
+| **Personal API token** | Available, not yet confirmed on a live tenant. rhylthyme-importers 0.4.8 and later send tokens as HTTP Basic, as Benchling documents; earlier versions send `Bearer`. If a token is refused, tell us. |
+| **Sign in with Benchling** | Not available yet. The code is written, but the Rhylthyme app isn't registered with Benchling, which takes an enterprise tenant. The button stays hidden until it is. |
+
+---
+
 ## What's the user experience?
 
 You have three entry points after a one-time connect:
@@ -33,8 +52,13 @@ Rhylthyme program is identical regardless of which path you came in by.
 
 There are two ways to connect: **Sign in with Benchling** (OAuth), when
 your tenant has installed the Rhylthyme app, or a **personal API token**.
+Both need an enterprise Benchling tenant. Today, use the API token: see
+[Where this stands](#where-this-stands).
 
 ### Sign in with Benchling
+
+*Not available yet. This describes how it will work once the Rhylthyme app is
+registered with Benchling.*
 
 Sign in to lab.rhylthyme.com, open **Edit profile**, scroll to
 **Benchling (optional)**, type your tenant subdomain and click **Sign in
@@ -55,6 +79,8 @@ Benchling's audit log shows the Rhylthyme app next to your name.
 
 In Benchling: **Settings → Account → Workspace API tokens → Create
 token**. Copy the token immediately; Benchling won't show it again.
+Benchling expires keys created after August 7, 2026 after 30 days, so you'll
+need to create a new one and reconnect when yours runs out.
 
 ### 2. Connect Benchling in Rhylthyme
 
@@ -65,9 +91,10 @@ scroll to **Benchling (optional)**, and paste:
 - **Personal API token** — what you just generated
 
 Rhylthyme validates the token against `GET /api/v2/users/me` on your
-tenant before storing anything. API keys are sent the way Benchling
-documents them, as HTTP Basic (the key as user name, empty password);
-OAuth access tokens are sent as `Bearer`. On success you'll see
+tenant before storing anything. From version 0.4.8, API keys are sent the way
+Benchling documents them, as HTTP Basic (the key as user name, empty password);
+earlier versions send them as `Bearer`. OAuth access tokens are sent as
+`Bearer`. On success you'll see
 *"Connected as Your Name @ acme.benchling.com"* with a Disconnect
 button.
 
